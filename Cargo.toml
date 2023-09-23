@@ -1,0 +1,41 @@
+[package]
+name = "halo2-zkcert"
+version = "0.1.0"
+edition = "2021"
+authors = ["richardliang", "0xSachinK"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+num-bigint = { version = "0.4", features = ["rand"] }
+sha2 = "0.10.6"
+rand = "0.8.5"
+rsa = { version = "0.6.1", features = ["serde"] }
+halo2-rsa = { branch = "main", default-features = false, git = "https://github.com/zkpdf/halo2-rsa.git"}
+halo2-base = { branch = "feat/zkevm-sha256", default-features = false, features = [
+    "halo2-axiom",
+    "display",
+    "test-utils"
+], git = "https://github.com/axiom-crypto/halo2-lib.git"}
+halo2-ecc = { branch = "feat/zkevm-sha256", default-features = false, features = [
+    "halo2-axiom",
+    "display"
+], git = "https://github.com/axiom-crypto/halo2-lib.git"}
+num-traits = "0.2.15"
+env_logger = "0.10.0"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+console_error_panic_hook = "0.1.7"
+rayon = "1.7"
+serde = { version = "1.0", features = ["derive"] }
+rand = "0.8.5"
+
+[dev-dependencies]
+criterion = "0.4"
+
+[features]
+default = ["halo2-axiom", "display"]
+display = ["halo2-base/display"]
+halo2-pse = ["halo2-base/halo2-pse"]
+halo2-axiom = ["halo2-base/halo2-axiom"]
