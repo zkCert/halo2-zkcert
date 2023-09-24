@@ -170,7 +170,7 @@ mod test {
             let max_byte_sizes = vec![1280];
 
             // Create test circuit
-            base_test().k(k as u32).lookup_bits(k - 1).run(|ctx, range| {
+            base_test().k(k as u32).lookup_bits(k - 1).expect_satisfied(!$should_err).run(|ctx, range| {
                 let range = range.clone();
                 let bigint_chip = BigUintConfig::construct(range.clone(), limb_bits);
                 let rsa_chip = RSAConfig::construct(bigint_chip, default_bits, exp_bits);
