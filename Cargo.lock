@@ -515,28 +515,6 @@ source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce#76
 dependencies = [
  "ark-std",
  "getset",
- "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git)",
- "itertools 0.11.0",
- "log",
- "num-bigint",
- "num-integer",
- "num-traits",
- "poseidon-rs",
- "rand",
- "rand_chacha",
- "rayon",
- "rustc-hash",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "halo2-base"
-version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=feat/zkevm-sha256#ab599dc3a79d33273910c2f963ed62152e581087"
-dependencies = [
- "ark-std",
- "getset",
  "halo2_proofs 0.2.0 (git+https://github.com/privacy-scaling-explorations/halo2.git?rev=7a21656)",
  "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git)",
  "itertools 0.11.0",
@@ -558,26 +536,7 @@ name = "halo2-ecc"
 version = "0.4.0"
 source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce#76dd54aa54d8b2b2687bd1c7fe9737946591f17d"
 dependencies = [
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce)",
- "itertools 0.10.5",
- "num-bigint",
- "num-integer",
- "num-traits",
- "rand",
- "rand_chacha",
- "rand_core",
- "rayon",
- "serde",
- "serde_json",
- "test-case",
-]
-
-[[package]]
-name = "halo2-ecc"
-version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=feat/zkevm-sha256#ab599dc3a79d33273910c2f963ed62152e581087"
-dependencies = [
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=feat/zkevm-sha256)",
+ "halo2-base",
  "itertools 0.10.5",
  "num-bigint",
  "num-integer",
@@ -599,8 +558,8 @@ dependencies = [
  "console_error_panic_hook",
  "env_logger",
  "getrandom",
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce)",
- "halo2-ecc 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce)",
+ "halo2-base",
+ "halo2-ecc",
  "js-sys",
  "num-bigint",
  "num-traits",
@@ -617,6 +576,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "halo2-sha256-unoptimized"
+version = "0.1.0"
+source = "git+https://github.com/zkpdf/halo2-sha256-unoptimized.git?branch=main#e4dc17127d3dfe0b1ed444d32083896575c971a2"
+dependencies = [
+ "console_error_panic_hook",
+ "env_logger",
+ "getrandom",
+ "halo2-base",
+ "halo2-rsa",
+ "hex",
+ "itertools 0.10.5",
+ "num-bigint",
+ "num-traits",
+ "rand",
+ "rayon",
+ "rsa",
+ "serde",
+ "sha2",
+]
+
+[[package]]
 name = "halo2-zkcert"
 version = "0.1.0"
 dependencies = [
@@ -624,9 +604,9 @@ dependencies = [
  "criterion",
  "env_logger",
  "getrandom",
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=feat/zkevm-sha256)",
- "halo2-ecc 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=feat/zkevm-sha256)",
+ "halo2-base",
  "halo2-rsa",
+ "halo2-sha256-unoptimized",
  "num-bigint",
  "num-traits",
  "rand",
