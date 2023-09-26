@@ -24,9 +24,16 @@ halo2-sha256-unoptimized = { branch = "main", default-features = false, features
     "halo2-axiom",
     "display",
 ], git = "https://github.com/zkpdf/halo2-sha256-unoptimized.git"}
-
+snark-verifier-sdk = { branch = "community-edition", default-features = false, features = [
+    "halo2-axiom",
+    "display",
+    "loader_halo2"
+], git = "https://github.com/axiom-crypto/snark-verifier.git"}
+x509-parser = { version = "0.15", features= ["verify"] }
+openssl = "0.10"
 num-traits = "0.2.15"
 env_logger = "0.10.0"
+itertools = "0.10.3"
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
