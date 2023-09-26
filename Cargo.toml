@@ -11,20 +11,20 @@ num-bigint = { version = "0.4", features = ["rand"] }
 sha2 = "0.10.6"
 rand = "0.8.5"
 rsa = { version = "0.6.1", features = ["serde"] }
-halo2-rsa = { branch = "main", default-features = false, features = [
+halo2-rsa = { branch = "develop", default-features = false, features = [
     "halo2-axiom",
     "display"
 ], git = "https://github.com/zkpdf/halo2-rsa.git"}
-halo2-base = { branch = "develop-ce", default-features = false, features = [
+halo2-base = { branch = "develop", default-features = false, features = [
     "halo2-axiom",
     "display",
     "test-utils"
 ], git = "https://github.com/axiom-crypto/halo2-lib.git"}
-halo2-sha256-unoptimized = { branch = "main", default-features = false, features = [
+halo2-sha256-unoptimized = { branch = "develop", default-features = false, features = [
     "halo2-axiom",
     "display",
 ], git = "https://github.com/zkpdf/halo2-sha256-unoptimized.git"}
-snark-verifier-sdk = { branch = "community-edition", default-features = false, features = [
+snark-verifier-sdk = { branch = "develop", default-features = false, features = [
     "halo2-axiom",
     "display",
     "loader_halo2"

@@ -611,27 +611,7 @@ checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
 [[package]]
 name = "halo2-base"
 version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#980b39bcca5b3327aaef6c8d73577d9381bfa899"
-dependencies = [
- "getset",
- "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git)",
- "itertools 0.11.0",
- "log",
- "num-bigint",
- "num-integer",
- "num-traits",
- "poseidon-rs",
- "rand_chacha",
- "rayon",
- "rustc-hash",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "halo2-base"
-version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce#76dd54aa54d8b2b2687bd1c7fe9737946591f17d"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop#524c8181ed43bcbb00b0f373b06749421ab6d369"
 dependencies = [
  "ark-std",
  "getset",
@@ -654,28 +634,9 @@ dependencies = [
 [[package]]
 name = "halo2-ecc"
 version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#980b39bcca5b3327aaef6c8d73577d9381bfa899"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop#524c8181ed43bcbb00b0f373b06749421ab6d369"
 dependencies = [
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
- "itertools 0.10.5",
- "num-bigint",
- "num-integer",
- "num-traits",
- "rand",
- "rand_chacha",
- "rand_core",
- "rayon",
- "serde",
- "serde_json",
- "test-case",
-]
-
-[[package]]
-name = "halo2-ecc"
-version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce#76dd54aa54d8b2b2687bd1c7fe9737946591f17d"
-dependencies = [
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce)",
+ "halo2-base",
  "itertools 0.10.5",
  "num-bigint",
  "num-integer",
@@ -692,37 +653,27 @@ dependencies = [
 [[package]]
 name = "halo2-rsa"
 version = "0.1.0"
-source = "git+https://github.com/zkpdf/halo2-rsa.git?branch=main#d28659bd6dc0d5dfb326797a8296bca7fa4c0cd9"
+source = "git+https://github.com/zkpdf/halo2-rsa.git?branch=develop#5a39a8f7fae89c6d891d10cbca552b45e96fed86"
 dependencies = [
- "console_error_panic_hook",
  "env_logger",
- "getrandom",
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce)",
- "halo2-ecc 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce)",
- "js-sys",
+ "halo2-base",
+ "halo2-ecc",
  "num-bigint",
  "num-traits",
  "rand",
- "rayon",
  "rsa",
- "serde",
- "serde-wasm-bindgen",
  "sha2",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "wasm-bindgen-rayon",
- "web-sys",
 ]
 
 [[package]]
 name = "halo2-sha256-unoptimized"
 version = "0.1.0"
-source = "git+https://github.com/zkpdf/halo2-sha256-unoptimized.git?branch=main#e4dc17127d3dfe0b1ed444d32083896575c971a2"
+source = "git+https://github.com/zkpdf/halo2-sha256-unoptimized.git?branch=develop#ad7dfc642ec0753ca4c89e2401097e63a5006b36"
 dependencies = [
  "console_error_panic_hook",
  "env_logger",
  "getrandom",
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce)",
+ "halo2-base",
  "halo2-rsa",
  "hex",
  "itertools 0.10.5",
@@ -743,7 +694,7 @@ dependencies = [
  "criterion",
  "env_logger",
  "getrandom",
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop-ce)",
+ "halo2-base",
  "halo2-rsa",
  "halo2-sha256-unoptimized",
  "itertools 0.10.5",
@@ -1495,17 +1446,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde-wasm-bindgen"
-version = "0.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3b4c031cd0d9014307d82b8abf653c0290fbdaeb4c02d00c63cf52f728628bf"
-dependencies = [
- "js-sys",
- "serde",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "serde_arrays"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1577,11 +1517,11 @@ checksum = "942b4a808e05215192e39f4ab80813e599068285906cc91aa64f923db842bd5a"
 
 [[package]]
 name = "snark-verifier"
-version = "0.1.6"
-source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=community-edition#7011e8ce0c2f7e79ab9629aa528cfb6837cdeafe"
+version = "0.1.7"
+source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=develop#624b003c656e44b14202d4b8a16a2f7bc4e71eeb"
 dependencies = [
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
- "halo2-ecc 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
+ "halo2-base",
+ "halo2-ecc",
  "hex",
  "itertools 0.11.0",
  "lazy_static",
@@ -1595,13 +1535,13 @@ dependencies = [
 
 [[package]]
 name = "snark-verifier-sdk"
-version = "0.1.6"
-source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=community-edition#7011e8ce0c2f7e79ab9629aa528cfb6837cdeafe"
+version = "0.1.7"
+source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=develop#624b003c656e44b14202d4b8a16a2f7bc4e71eeb"
 dependencies = [
  "ark-std",
  "bincode",
  "getset",
- "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
+ "halo2-base",
  "hex",
  "itertools 0.10.5",
  "lazy_static",
@@ -1630,12 +1570,6 @@ dependencies = [
  "base64ct",
  "der",
 ]
-
-[[package]]
-name = "spmc"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02a8428da277a8e3a15271d79943e80ccc2ef254e78813a166a08d65e4c3ece5"
 
 [[package]]
 name = "static_assertions"
@@ -1888,8 +1822,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7706a72ab36d8cb1f80ffbf0e071533974a60d0a308d01a5d0375bf60499a342"
 dependencies = [
  "cfg-if",
- "serde",
- "serde_json",
  "wasm-bindgen-macro",
 ]
 
@@ -1906,18 +1838,6 @@ dependencies = [
  "quote",
  "syn 2.0.37",
  "wasm-bindgen-shared",
-]
-
-[[package]]
-name = "wasm-bindgen-futures"
-version = "0.4.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c02dbc21516f9f1f04f187958890d7e6026df8d16540b7ad9492bc34a67cea03"
-dependencies = [
- "cfg-if",
- "js-sys",
- "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
@@ -1941,18 +1861,6 @@ dependencies = [
  "syn 2.0.37",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
-]
-
-[[package]]
-name = "wasm-bindgen-rayon"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df87c67450805c305d3ae44a3ac537b0253d029153c25afc3ecd2edc36ccafb1"
-dependencies = [
- "js-sys",
- "rayon",
- "spmc",
- "wasm-bindgen",
 ]
 
 [[package]]
