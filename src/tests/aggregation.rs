@@ -1,5 +1,21 @@
 use crate::*;
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+use halo2_base::{
+    halo2_proofs::halo2curves::bn256::Fr,
+    gates::{
+        circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
+        GateInstructions, RangeInstructions
+    },
+    utils::fs::gen_srs
+};
+use halo2_rsa::{
+    BigUintConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
+};
+use snark_verifier_sdk::{
+    SHPLONK,
+    gen_pk,
+    halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk},
+    Snark,
+};
 
 use rand::{thread_rng, Rng};
 use rsa::{Hash, PaddingScheme, PublicKeyParts, RsaPrivateKey, RsaPublicKey};
@@ -9,6 +25,8 @@ use std::io::Read;
 use std::vec;
 use x509_parser::pem::parse_x509_pem;
 use x509_parser::public_key::PublicKey;
+
+use num_bigint::BigUint;
 
 fn generate_sha256_with_rsa_circuit(verify_cert_path: &str, issuer_cert_path: &str) -> Snark {
     // Read the PEM certificate from a file

@@ -1,31 +1,17 @@
-use halo2_rsa::big_uint::BigUintInstructions;
-// use ark_std::{end_timer, start_timer};
+use halo2_base::{
+    halo2_proofs::plonk::Error,
+    gates::GateInstructions,
+    QuantumCell::{Existing, Constant},
+    utils::{ScalarField, BigPrimeField},
+    AssignedValue, Context
+};
 use halo2_rsa::{
+    big_uint::BigUintInstructions,
     RSAConfig,
-    AssignedBigUint, AssignedRSAPubE, AssignedRSAPublicKey, AssignedRSASignature, BigUintConfig,
-    Fresh, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
+    AssignedRSAPublicKey, AssignedRSASignature, RSAInstructions
 };
 use halo2_sha256_unoptimized::Sha256Chip;
-use halo2_base::halo2_proofs::plonk::Error;
-use halo2_base::QuantumCell::{Existing, Constant};
-use halo2_base::{
-    gates::{
-        circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage, BaseCircuitParams},
-        flex_gate::GateChip, range::RangeChip, GateInstructions, RangeInstructions},
-    utils::{biguint_to_fe, fe_to_biguint, ScalarField, BigPrimeField},
-    AssignedValue, Context,
-    utils::fs::gen_srs
-};
-use snark_verifier_sdk::halo2::aggregation::{AggregationConfigParams, VerifierUniversality};
-use snark_verifier_sdk::SHPLONK;
-use snark_verifier_sdk::{
-    gen_pk,
-    halo2::{aggregation::AggregationCircuit, gen_snark_shplonk},
-    Snark,
-};
 use itertools::Itertools;
-
-use num_bigint::BigUint;
 
 #[cfg(test)]
 mod tests;
@@ -67,16 +53,8 @@ impl<F: BigPrimeField + ScalarField> X509CertificateVerifierChip<F> {
         msg: &[u8],
         signature: &AssignedRSASignature<F>,
     ) -> Result<(AssignedValue<F>, Vec<AssignedValue<F>>), Error> {
-        let rsa_config = match &self.signature_algorithm {
-            SignatureAlgorithm::RSA(config) => {
-                config
-            }
-        };
-        let sha256_config = match &self.hash_function {
-            HashFunction::SHA256(config) => {
-                config
-            }
-        };
+        let SignatureAlgorithm::RSA(rsa_config) = &self.signature_algorithm;
+        let HashFunction::SHA256(sha256_config) = &self.hash_function;
 
         // Adapted from halo2-rsa https://github.com/zkemail/halo2-rsa/blob/main/src/lib.rs
         let biguint = rsa_config.biguint_config();
@@ -88,7 +66,7 @@ impl<F: BigPrimeField + ScalarField> X509CertificateVerifierChip<F> {
         let limb_bytes = limb_bits / 8;
         let mut hashed_u64s = vec![];
         let bases = (0..limb_bytes)
-            .map(|i| F::from((1u64 << (8 * i)) as u64))
+            .map(|i| F::from(1u64 << (8 * i)))
             .map(Constant)
             .collect_vec();
         for i in 0..(bytes_bits / limb_bits) {
@@ -111,6 +89,10 @@ impl<F: BigPrimeField + ScalarField> X509CertificateVerifierChip<F> {
 mod test {
     use super::*;
     use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+    use halo2_rsa::{
+        BigUintConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
+    };
+
     use halo2_base::utils::testing::base_test;
 
     use rand::{thread_rng, Rng};
@@ -122,6 +104,8 @@ mod test {
     use x509_parser::pem::parse_x509_pem;
     use x509_parser::certificate::X509Certificate;
     use x509_parser::public_key::PublicKey;
+
+    use num_bigint::BigUint;
 
     pub fn check_signature(cert: &X509Certificate<'_>, issuer: &X509Certificate<'_>) -> bool {
         let issuer_public_key = issuer.public_key();
@@ -166,8 +150,8 @@ mod test {
                 _ => panic!("Failed to grab modulus. Not RSA")
             };
 
-            // // Verify Cert in Rust
-            // let is_valid = check_signature(&cert, &issuer_cert);
+            // Verify Cert in Rust
+            let _is_valid = check_signature(&cert, &issuer_cert);
 
             // Circuit inputs
             let k: usize = 18;
@@ -211,7 +195,6 @@ mod test {
     
     
     #[test]
-    #[ignore]
     fn test_verify_pkcs1_sha256_with_rsa1() {        
         let k: usize = 18;
 
@@ -267,7 +250,6 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn test_verify_pkcs1_sha256_with_rsa2() {
         impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_3.pem",
@@ -277,7 +259,6 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn test_verify_pkcs1_sha256_with_rsa3() {
         impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_2.pem",
@@ -287,7 +268,6 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn test_verify_pkcs1_sha256_with_rsa4() {
         impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_3.pem",
