@@ -63,17 +63,11 @@ impl<F: BigPrimeField + ScalarField> X509CertificateVerifierChip<F> {
         let rsa_config = match &self.signature_algorithm {
             SignatureAlgorithm::RSA(config) => {
                 config
-            },
-            _ => {
-                panic!("Unsupported signature algorithm");
             }
         };
         let sha256_config = match &self.hash_function {
             HashFunction::SHA256(config) => {
                 config
-            },
-            _ => {
-                panic!("Unsupported hash function");
             }
         };
 
@@ -126,7 +120,7 @@ mod test {
         cert.verify_signature(Some(&issuer_public_key)).is_ok()
     }
 
-    macro_rules! impl_individual_cert_verification_test_circuit {
+    macro_rules! impl_verify_pkcs1_sha256_with_rsa_test_circuit {
         ($verify_cert_path:expr, $issuer_cert_path: expr, $should_err: expr) => {
             // Read the PEM certificate from a file
             let mut cert_file = File::open($verify_cert_path).expect("Failed to open PEM file");
@@ -164,7 +158,7 @@ mod test {
                 _ => panic!("Failed to grab modulus. Not RSA")
             };
 
-            // // Verify Cert3 in Rust
+            // // Verify Cert in Rust
             // let is_valid = check_signature(&cert, &issuer_cert);
 
             // Circuit inputs
@@ -264,7 +258,7 @@ mod test {
 
     #[test]
     fn test_verify_pkcs1_sha256_with_rsa2() {
-        impl_individual_cert_verification_test_circuit!(
+        impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_3.pem",
             "./certs/cert_2.pem",
             false
@@ -273,7 +267,7 @@ mod test {
 
     #[test]
     fn test_verify_pkcs1_sha256_with_rsa3() {
-        impl_individual_cert_verification_test_circuit!(
+        impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_2.pem",
             "./certs/cert_1.pem",
             false
@@ -282,7 +276,7 @@ mod test {
 
     #[test]
     fn test_verify_pkcs1_sha256_with_rsa4() {
-        impl_individual_cert_verification_test_circuit!(
+        impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_3.pem",
             "./certs/cert_1.pem",
             true
