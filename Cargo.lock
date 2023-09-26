@@ -611,7 +611,7 @@ checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
 [[package]]
 name = "halo2-base"
 version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop#524c8181ed43bcbb00b0f373b06749421ab6d369"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#980b39bcca5b3327aaef6c8d73577d9381bfa899"
 dependencies = [
  "ark-std",
  "getset",
@@ -634,7 +634,7 @@ dependencies = [
 [[package]]
 name = "halo2-ecc"
 version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop#524c8181ed43bcbb00b0f373b06749421ab6d369"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#980b39bcca5b3327aaef6c8d73577d9381bfa899"
 dependencies = [
  "halo2-base",
  "itertools 0.10.5",
@@ -653,7 +653,7 @@ dependencies = [
 [[package]]
 name = "halo2-rsa"
 version = "0.1.0"
-source = "git+https://github.com/zkpdf/halo2-rsa.git?branch=develop#5a39a8f7fae89c6d891d10cbca552b45e96fed86"
+source = "git+https://github.com/zkpdf/halo2-rsa.git?branch=main#cec7f8a6092cf1512107680598b88d44485579d8"
 dependencies = [
  "env_logger",
  "halo2-base",
@@ -668,13 +668,12 @@ dependencies = [
 [[package]]
 name = "halo2-sha256-unoptimized"
 version = "0.1.0"
-source = "git+https://github.com/zkpdf/halo2-sha256-unoptimized.git?branch=develop#ad7dfc642ec0753ca4c89e2401097e63a5006b36"
+source = "git+https://github.com/zkpdf/halo2-sha256-unoptimized.git?branch=main#256ed171a0abf6c155404d2da4e8392d2c56e4cc"
 dependencies = [
  "console_error_panic_hook",
  "env_logger",
  "getrandom",
  "halo2-base",
- "halo2-rsa",
  "hex",
  "itertools 0.10.5",
  "num-bigint",
@@ -1517,8 +1516,8 @@ checksum = "942b4a808e05215192e39f4ab80813e599068285906cc91aa64f923db842bd5a"
 
 [[package]]
 name = "snark-verifier"
-version = "0.1.7"
-source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=develop#624b003c656e44b14202d4b8a16a2f7bc4e71eeb"
+version = "0.1.6"
+source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=community-edition#7011e8ce0c2f7e79ab9629aa528cfb6837cdeafe"
 dependencies = [
  "halo2-base",
  "halo2-ecc",
@@ -1535,8 +1534,8 @@ dependencies = [
 
 [[package]]
 name = "snark-verifier-sdk"
-version = "0.1.7"
-source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=develop#624b003c656e44b14202d4b8a16a2f7bc4e71eeb"
+version = "0.1.6"
+source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=community-edition#7011e8ce0c2f7e79ab9629aa528cfb6837cdeafe"
 dependencies = [
  "ark-std",
  "bincode",
