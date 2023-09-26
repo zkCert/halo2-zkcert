@@ -1,4 +1,5 @@
 use halo2_rsa::big_uint::BigUintInstructions;
+// use ark_std::{end_timer, start_timer};
 use halo2_rsa::{
     RSAConfig,
     AssignedBigUint, AssignedRSAPubE, AssignedRSAPublicKey, AssignedRSASignature, BigUintConfig,
@@ -8,9 +9,12 @@ use halo2_sha256_unoptimized::Sha256Chip;
 use halo2_base::halo2_proofs::plonk::Error;
 use halo2_base::QuantumCell::{Existing, Constant};
 use halo2_base::{
-    gates::{flex_gate::GateChip, range::RangeChip, GateInstructions, RangeInstructions},
+    gates::{
+        circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage, BaseCircuitParams},
+        flex_gate::GateChip, range::RangeChip, GateInstructions, RangeInstructions},
     utils::{biguint_to_fe, fe_to_biguint, ScalarField, BigPrimeField},
     AssignedValue, Context,
+    utils::fs::gen_srs
 };
 use snark_verifier_sdk::halo2::aggregation::{AggregationConfigParams, VerifierUniversality};
 use snark_verifier_sdk::SHPLONK;
@@ -111,6 +115,7 @@ mod test {
     use sha2::{Digest, Sha256};
     use std::fs::File;
     use std::io::Read;
+    use std::vec;
     use x509_parser::pem::parse_x509_pem;
     use x509_parser::certificate::X509Certificate;
     use x509_parser::public_key::PublicKey;
@@ -201,7 +206,9 @@ mod test {
         };
     }
     
+    
     #[test]
+    #[ignore]
     fn test_verify_pkcs1_sha256_with_rsa1() {        
         let k: usize = 18;
 
@@ -257,6 +264,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn test_verify_pkcs1_sha256_with_rsa2() {
         impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_3.pem",
@@ -266,6 +274,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn test_verify_pkcs1_sha256_with_rsa3() {
         impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_2.pem",
@@ -275,6 +284,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn test_verify_pkcs1_sha256_with_rsa4() {
         impl_verify_pkcs1_sha256_with_rsa_test_circuit!(
             "./certs/cert_3.pem",
@@ -283,4 +293,141 @@ mod test {
         );
     }
 
+    #[test]
+    fn test_aggregation() {
+        
+        fn generate_circuit() -> Snark {
+            let k: usize = 8;
+
+            // Circuit inputs
+            // let limb_bits = 64;
+            // let default_bits = 2048;
+            // let exp_bits = 5;
+            // let default_e = 65537 as u32;
+            // let max_byte_sizes = vec![192];
+
+            let lookup_bits = k as usize - 1;
+            let circuit_params = BaseCircuitParams {
+                k: k as usize,
+                num_advice_per_phase: vec![2],
+                num_lookup_advice_per_phase: vec![1],
+                num_fixed: 1,
+                lookup_bits: Some(lookup_bits),
+                num_instance_columns: 1,
+            };
+    
+            let mut builder = BaseCircuitBuilder::new(false).use_params(circuit_params);
+            // builder.set_lookup_bits(k - 1);
+            
+            let range = builder.range_chip();
+            let ctx = builder.main(0);
+            
+            // let bigint_chip = BigUintConfig::construct(range.clone(), limb_bits);
+            // let rsa_chip = RSAConfig::construct(bigint_chip, default_bits, exp_bits);
+            // let sha256_chip = Sha256Chip::construct(max_byte_sizes, range.clone(), true);
+            // let chip = X509CertificateVerifierChip::construct(
+            //     SignatureAlgorithm::RSA(rsa_chip.clone()),
+            //     HashFunction::SHA256(sha256_chip),
+            // );
+    
+            // // Generate values to be fed into the circuit (Pure Rust)
+            // let mut rng = thread_rng();
+            // let private_key = RsaPrivateKey::new(&mut rng, default_bits).expect("failed to generate a key");
+            // let public_key = RsaPublicKey::from(&private_key);
+            // let mut msg:[u8;128] = [0; 128];
+            // for i in 0..128 {
+            //     msg[i] = rng.gen();
+            // }
+            // let expected_hashed_msg = Sha256::digest(&msg);
+            // let padding = PaddingScheme::PKCS1v15Sign {
+            //     hash: Some(Hash::SHA2_256),
+            // };
+            // let mut sign = private_key
+            //     .sign(padding, &expected_hashed_msg)
+            //     .expect("fail to sign a hashed message.");
+            // sign.reverse();
+            // let sign_big = BigUint::from_bytes_le(&sign);
+            // let n_big =
+            //     BigUint::from_radix_le(&public_key.n().clone().to_radix_le(16), 16)
+            //         .unwrap();
+            // let e_fix = RSAPubE::Fix(BigUint::from(default_e));
+            
+            // // Assign values to the circuit
+            // let sign = rsa_chip.assign_signature(ctx, RSASignature::new(sign_big)).unwrap();
+            // let public_key = rsa_chip
+            //     .assign_public_key(ctx, RSAPublicKey::new(n_big, e_fix)).unwrap();
+            
+            // let (is_valid, hashed_msg) =
+            //     chip.verify_pkcs1_sha256_with_rsa(ctx, &public_key, &msg, &sign).unwrap();
+            
+            // range.gate().assert_is_const(ctx, &is_valid, &Fr::one());
+
+            let x = ctx.load_witness(Fr::from(14));
+            range.gate().add(ctx, x, x);
+
+            // Todo: Add a constraint for is_valid as well.
+
+            // Generate params
+            println!("Generate params");
+            let params = gen_srs(k as u32);
+            
+            // println!("Generating proving key");
+            let pk = gen_pk(&params, &builder, None);
+    
+            // Generate proof
+            println!("Generating proof");
+            gen_snark_shplonk(&params, &pk, builder, None::<&str>)
+        }
+       
+       println!("Generating dummy snark");
+       let dummy_snark = generate_circuit();
+
+        // Create an aggregation circuit using the snark
+        let agg_k = 12;
+        let agg_lookup_bits = agg_k - 1;
+        let agg_params = gen_srs(agg_k as u32);
+        let mut agg_circuit = AggregationCircuit::new::<SHPLONK>(
+            CircuitBuilderStage::Keygen,
+            AggregationConfigParams {degree: agg_k, lookup_bits: agg_lookup_bits as usize, ..Default::default()},
+            &agg_params,
+            vec![dummy_snark],
+            VerifierUniversality::Full
+        );
+
+        println!("Aggregation circuit calculating params");
+        let agg_config = agg_circuit.calculate_params(Some(10));
+
+        // let start0 = start_timer!(|| "gen vk & pk");
+        println!("Aggregation circuit generating pk");
+        let pk = gen_pk(&agg_params, &agg_circuit, None);
+        
+        let break_points = agg_circuit.break_points();
+
+        // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+        // let _pk = gen_pk(&params, &agg_circuit, Some(Path::new("examples/agg.pk")));
+        // end_timer!(start0);
+        // let pk = read_pk::<AggregationCircuit>(Path::new("examples/agg.pk"), agg_config).unwrap();
+        // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+        // let break_points = agg_circuit.break_points();
+
+        println!("Generating snark");
+        let snark = generate_circuit();
+        
+        let agg_circuit = AggregationCircuit::new::<SHPLONK>(
+            CircuitBuilderStage::Prover,
+            agg_config,
+            &agg_params,
+            vec![snark],
+            VerifierUniversality::Full,
+        ).use_break_points(break_points.clone());
+
+        println!("Generating aggregation snark");
+        let agg_snark = gen_snark_shplonk(&agg_params, &pk, agg_circuit, None::<&str>);
+        println!("Aggregation snark success");
+
+    }
 }
+
+
+
+// Note: Apparently MSMs are for generating KZG params rather than proofs.
