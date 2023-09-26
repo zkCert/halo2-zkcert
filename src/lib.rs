@@ -297,75 +297,81 @@ mod test {
     fn test_aggregation() {
         
         fn generate_circuit() -> Snark {
-            let k: usize = 8;
+            let k: usize = 18;
+            let lookup_bits = k as usize - 1;
 
             // Circuit inputs
-            // let limb_bits = 64;
-            // let default_bits = 2048;
-            // let exp_bits = 5;
-            // let default_e = 65537 as u32;
-            // let max_byte_sizes = vec![192];
+            let limb_bits = 64;
+            let default_bits = 512;
+            let exp_bits = 5;
+            let default_e = 65537 as u32;
+            let max_byte_sizes = vec![192];
+    
+            let builder = BaseCircuitBuilder::new(false);
 
-            let lookup_bits = k as usize - 1;
+
+            // Set all
             let circuit_params = BaseCircuitParams {
                 k: k as usize,
-                num_advice_per_phase: vec![2],
+                num_advice_per_phase: vec![40],
                 num_lookup_advice_per_phase: vec![1],
                 num_fixed: 1,
                 lookup_bits: Some(lookup_bits),
                 num_instance_columns: 1,
             };
-    
-            let mut builder = BaseCircuitBuilder::new(false).use_params(circuit_params);
-            // builder.set_lookup_bits(k - 1);
+            let mut builder = builder.use_params(circuit_params);
             
+
+            // Set few
+            // builder.set_k(k);
+            // builder.set_lookup_bits(lookup_bits);
+            // builder.set_instance_columns();
+
             let range = builder.range_chip();
             let ctx = builder.main(0);
             
-            // let bigint_chip = BigUintConfig::construct(range.clone(), limb_bits);
-            // let rsa_chip = RSAConfig::construct(bigint_chip, default_bits, exp_bits);
-            // let sha256_chip = Sha256Chip::construct(max_byte_sizes, range.clone(), true);
-            // let chip = X509CertificateVerifierChip::construct(
-            //     SignatureAlgorithm::RSA(rsa_chip.clone()),
-            //     HashFunction::SHA256(sha256_chip),
-            // );
+            let bigint_chip = BigUintConfig::construct(range.clone(), limb_bits);
+            let rsa_chip = RSAConfig::construct(bigint_chip, default_bits, exp_bits);
+            let sha256_chip = Sha256Chip::construct(max_byte_sizes, range.clone(), true);
+            let chip = X509CertificateVerifierChip::construct(
+                SignatureAlgorithm::RSA(rsa_chip.clone()),
+                HashFunction::SHA256(sha256_chip),
+            );
     
-            // // Generate values to be fed into the circuit (Pure Rust)
-            // let mut rng = thread_rng();
-            // let private_key = RsaPrivateKey::new(&mut rng, default_bits).expect("failed to generate a key");
-            // let public_key = RsaPublicKey::from(&private_key);
-            // let mut msg:[u8;128] = [0; 128];
-            // for i in 0..128 {
-            //     msg[i] = rng.gen();
-            // }
-            // let expected_hashed_msg = Sha256::digest(&msg);
-            // let padding = PaddingScheme::PKCS1v15Sign {
-            //     hash: Some(Hash::SHA2_256),
-            // };
-            // let mut sign = private_key
-            //     .sign(padding, &expected_hashed_msg)
-            //     .expect("fail to sign a hashed message.");
-            // sign.reverse();
-            // let sign_big = BigUint::from_bytes_le(&sign);
-            // let n_big =
-            //     BigUint::from_radix_le(&public_key.n().clone().to_radix_le(16), 16)
-            //         .unwrap();
-            // let e_fix = RSAPubE::Fix(BigUint::from(default_e));
+            // Generate values to be fed into the circuit (Pure Rust)
+            let mut rng = thread_rng();
+            let private_key = RsaPrivateKey::new(&mut rng, default_bits).expect("failed to generate a key");
+            let public_key = RsaPublicKey::from(&private_key);
+            let mut msg:[u8;128] = [0; 128];
+            for i in 0..128 {
+                msg[i] = rng.gen();
+            }
+            let expected_hashed_msg = Sha256::digest(&msg);
+            let padding = PaddingScheme::PKCS1v15Sign {
+                hash: Some(Hash::SHA2_256),
+            };
+            let mut sign = private_key
+                .sign(padding, &expected_hashed_msg)
+                .expect("fail to sign a hashed message.");
+            sign.reverse();
+            let sign_big = BigUint::from_bytes_le(&sign);
+            let n_big =
+                BigUint::from_radix_le(&public_key.n().clone().to_radix_le(16), 16)
+                    .unwrap();
+            let e_fix = RSAPubE::Fix(BigUint::from(default_e));
             
-            // // Assign values to the circuit
-            // let sign = rsa_chip.assign_signature(ctx, RSASignature::new(sign_big)).unwrap();
-            // let public_key = rsa_chip
-            //     .assign_public_key(ctx, RSAPublicKey::new(n_big, e_fix)).unwrap();
+            // Assign values to the circuit
+            let sign = rsa_chip.assign_signature(ctx, RSASignature::new(sign_big)).unwrap();
+            let public_key = rsa_chip
+                .assign_public_key(ctx, RSAPublicKey::new(n_big, e_fix)).unwrap();
             
-            // let (is_valid, hashed_msg) =
-            //     chip.verify_pkcs1_sha256_with_rsa(ctx, &public_key, &msg, &sign).unwrap();
+            let (is_valid, hashed_msg) =
+                chip.verify_pkcs1_sha256_with_rsa(ctx, &public_key, &msg, &sign).unwrap();
             
-            // range.gate().assert_is_const(ctx, &is_valid, &Fr::one());
+            range.gate().assert_is_const(ctx, &is_valid, &Fr::one());
 
-            let x = ctx.load_witness(Fr::from(14));
-            range.gate().add(ctx, x, x);
-
-            // Todo: Add a constraint for is_valid as well.
+            // let x = ctx.load_witness(Fr::from(14));
+            // range.gate().add(ctx, x, x);
 
             // Generate params
             println!("Generate params");
@@ -431,3 +437,6 @@ mod test {
 
 
 // Note: Apparently MSMs are for generating KZG params rather than proofs.
+// When I am configuring a circuit with BaseBuilder do I also need to pass in the number of columns?
+// I do apparently, because if you look into BaseCircuitBuilder.synthesize() they populate the basic_gates
+// array only when the number of advice columns > 0.
