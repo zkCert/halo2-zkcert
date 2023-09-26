@@ -10,5 +10,5 @@ Halo2 library to verify a chain of certificates. Currently supports RSA signatur
 
 # Uses
 - [Halo2-RSA](https://github.com/zkemail/halo2-rsa)
-- [Halo2-SHA256-Unoptimized](https://github.com/zkpdf/halo2-sha256-unoptimized/)https://github.com/zkpdf/halo2-sha256-unoptimized/
+- [Halo2-SHA256-Unoptimized](https://github.com/zkpdf/halo2-sha256-unoptimized/)
 
