@@ -132,7 +132,7 @@ fn generate_sha256_with_rsa_circuit(verify_cert_path: &str, issuer_cert_path: &s
 fn test_evm_verification_sha256_with_rsa1() {
     
     fn generate_circuit() -> Snark {
-        let k: usize = 12;
+        let k: usize = 8;
         let lookup_bits = k as usize - 1;
 
         // Circuit inputs
@@ -194,7 +194,8 @@ fn test_evm_verification_sha256_with_rsa1() {
         let x = ctx.load_witness(Fr::from(14));
         range.gate().add(ctx, x, x);
 
-        let circuit_params = builder.calculate_params(Some(10));
+        // NOTE: Set to 0. Hence no zero knowledge.
+        let circuit_params = builder.calculate_params(Some(0));
         println!("Circuit params: {:?}", circuit_params);
         let builder = builder.use_params(circuit_params);
 
@@ -227,7 +228,8 @@ fn test_evm_verification_sha256_with_rsa1() {
     );
 
     println!("Aggregation circuit calculating params");
-    let agg_config = agg_circuit.calculate_params(Some(10));
+    // NOTE: Set to 0. Hence no zero knowledge.
+    let agg_config = agg_circuit.calculate_params(Some(0));
     println!("Aggregation circuit params: {:?}", agg_config);
 
     // let start0 = start_timer!(|| "gen vk & pk");
