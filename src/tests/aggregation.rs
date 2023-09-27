@@ -382,6 +382,7 @@ fn test_aggregation_sha256_with_rsa1() {
 
     println!("Aggregation circuit calculating params");
     let agg_config = agg_circuit.calculate_params(Some(10));
+    println!("Aggregation circuit params: {:?}", agg_config);
 
     // let start0 = start_timer!(|| "gen vk & pk");
     println!("Aggregation circuit generating pk");
@@ -436,6 +437,7 @@ fn test_aggregation_sha256_with_rsa2() {
 
     println!("Aggregation circuit calculating params");
     let agg_config = agg_circuit.calculate_params(Some(10));
+    println!("Aggregation circuit params: {:?}", agg_config);
 
     // let start0 = start_timer!(|| "gen vk & pk");
     println!("Aggregation circuit generating pk");
