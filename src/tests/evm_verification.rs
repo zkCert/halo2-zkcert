@@ -261,7 +261,7 @@ fn test_evm_verification_sha256_with_rsa1() {
         &agg_params,
         pk.get_vk(),
         num_instances,
-        Some(Path::new("examples/StandardPlonkVerifier.sol")),
+        Some(Path::new("src/tests/AggregationVerifier.sol")),
     );
 
     println!("Verifying EVM proof");
