@@ -27,7 +27,8 @@ halo2-sha256-unoptimized = { branch = "main", default-features = false, features
 snark-verifier-sdk = { branch = "community-edition", default-features = false, features = [
     "halo2-axiom",
     "display",
-    "loader_halo2"
+    "loader_evm",
+    "loader_halo2",
 ], git = "https://github.com/axiom-crypto/snark-verifier.git"}
 x509-parser = { version = "0.15", features= ["verify"] }
 openssl = "0.10"
