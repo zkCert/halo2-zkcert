@@ -263,6 +263,7 @@ fn test_evm_verification_sha256_with_rsa1() {
         num_instances,
         Some(Path::new("src/tests/AggregationVerifier.sol")),
     );
+    println!("Size of the contract: {} bytes", deployment_code.len());
 
     println!("Verifying EVM proof");
     evm_verify(deployment_code, instances, proof);
