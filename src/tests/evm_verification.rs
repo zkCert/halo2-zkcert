@@ -216,7 +216,7 @@ fn test_evm_verification_sha256_with_rsa1() {
     let snark2 = generate_circuit();
 
     // Create an aggregation circuit using the snark
-    let agg_k = 22;     // Advice columns < 10
+    let agg_k = 21;     // Advice columns < 10
     let agg_lookup_bits = agg_k - 1;
     let agg_params = gen_srs(agg_k as u32);
     let mut agg_circuit = AggregationCircuit::new::<SHPLONK>(
