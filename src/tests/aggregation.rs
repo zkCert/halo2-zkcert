@@ -520,6 +520,206 @@ fn test_aggregation_split_sha256_rsa1() {
     println!("Aggregation snark success");
 }
 
+#[test]
+fn test_aggregation_split_sha256_rsa2() {
+    println!("Generating dummy snark");
+    let snark1 = generate_sha256_circuit(
+        "./certs/cert_2.pem",
+        "./certs/cert_1.pem",
+    );
+    let snark2 = generate_rsa_circuit(
+        "./certs/cert_2.pem",
+        "./certs/cert_1.pem",
+    );
+
+    // Create an aggregation circuit using the snark
+    let agg_k = 16;
+    let agg_lookup_bits = agg_k - 1;
+    let agg_params = gen_srs(agg_k as u32);
+    let mut agg_circuit = AggregationCircuit::new::<SHPLONK>(
+        CircuitBuilderStage::Keygen,
+        AggregationConfigParams {degree: agg_k, lookup_bits: agg_lookup_bits as usize, ..Default::default()},
+        &agg_params,
+        vec![snark1.clone(), snark2.clone()],
+        VerifierUniversality::Full
+    );
+
+    println!("Aggregation circuit calculating params");
+    let agg_config = agg_circuit.calculate_params(Some(10));
+
+    // let start0 = start_timer!(|| "gen vk & pk");
+    println!("Aggregation circuit generating pk");
+    let pk = gen_pk(&agg_params, &agg_circuit, None);
+    
+    let break_points = agg_circuit.break_points();
+
+    // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+    // let _pk = gen_pk(&params, &agg_circuit, Some(Path::new("examples/agg.pk")));
+    // end_timer!(start0);
+    // let pk = read_pk::<AggregationCircuit>(Path::new("examples/agg.pk"), agg_config).unwrap();
+    // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+    // let break_points = agg_circuit.break_points();
+
+    let agg_circuit = AggregationCircuit::new::<SHPLONK>(
+        CircuitBuilderStage::Prover,
+        agg_config,
+        &agg_params,
+        vec![snark1, snark2],
+        VerifierUniversality::Full,
+    ).use_break_points(break_points.clone());
+
+    println!("Generating aggregation snark");
+    let _agg_snark = gen_snark_shplonk(&agg_params, &pk, agg_circuit, None::<&str>);
+    println!("Aggregation snark success");
+}
+
+#[test]
+fn test_two_aggregation_split_sha256_rsa() {
+    println!("Generating dummy snark");
+    let snark1 = generate_sha256_circuit(
+        "./certs/cert_3.pem",
+        "./certs/cert_2.pem",
+    );
+    let snark2 = generate_rsa_circuit(
+        "./certs/cert_3.pem",
+        "./certs/cert_2.pem",
+    );
+
+    // Create an aggregation circuit using the snark
+    let agg_k1 = 16;
+    let agg_lookup_bits1 = agg_k1 - 1;
+    let agg_params1 = gen_srs(agg_k1 as u32);
+    let mut agg_circuit1 = AggregationCircuit::new::<SHPLONK>(
+        CircuitBuilderStage::Keygen,
+        AggregationConfigParams {degree: agg_k1, lookup_bits: agg_lookup_bits1 as usize, ..Default::default()},
+        &agg_params1,
+        vec![snark1.clone(), snark2.clone()],
+        VerifierUniversality::Full
+    );
+
+    println!("Aggregation circuit calculating params");
+    let agg_config1 = agg_circuit1.calculate_params(Some(10));
+
+    // let start0 = start_timer!(|| "gen vk & pk");
+    println!("Aggregation circuit generating pk");
+    let pk1 = gen_pk(&agg_params1, &agg_circuit1, None);
+    
+    let break_points1 = agg_circuit1.break_points();
+
+    // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+    // let _pk = gen_pk(&params, &agg_circuit1, Some(Path::new("examples/agg.pk")));
+    // end_timer!(start0);
+    // let pk = read_pk::<AggregationCircuit>(Path::new("examples/agg.pk"), agg_config1).unwrap();
+    // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+    // let break_points1 = agg_circuit1.break_points();
+
+    let agg_circuit1 = AggregationCircuit::new::<SHPLONK>(
+        CircuitBuilderStage::Prover,
+        agg_config1,
+        &agg_params1,
+        vec![snark1, snark2],
+        VerifierUniversality::Full,
+    ).use_break_points(break_points1.clone());
+
+    println!("Generating aggregation snark");
+    let agg_snark1 = gen_snark_shplonk(&agg_params1, &pk1, agg_circuit1, None::<&str>);
+    println!("Aggregation snark success");
+
+    // Create second aggregation snark
+    println!("Generating dummy snark");
+    let snark3 = generate_sha256_circuit(
+        "./certs/cert_2.pem",
+        "./certs/cert_1.pem",
+    );
+    let snark4 = generate_rsa_circuit(
+        "./certs/cert_2.pem",
+        "./certs/cert_1.pem",
+    );
+
+    // Create an aggregation circuit using the snark
+    let agg_k2 = 16;
+    let agg_lookup_bits2 = agg_k2 - 1;
+    let agg_params2 = gen_srs(agg_k2 as u32);
+    let mut agg_circuit2 = AggregationCircuit::new::<SHPLONK>(
+        CircuitBuilderStage::Keygen,
+        AggregationConfigParams {degree: agg_k2, lookup_bits: agg_lookup_bits2 as usize, ..Default::default()},
+        &agg_params2,
+        vec![snark3.clone(), snark4.clone()],
+        VerifierUniversality::Full
+    );
+
+    println!("Aggregation circuit calculating params");
+    let agg_config2 = agg_circuit2.calculate_params(Some(10));
+
+    // let start0 = start_timer!(|| "gen vk & pk");
+    println!("Aggregation circuit generating pk");
+    let pk2 = gen_pk(&agg_params2, &agg_circuit2, None);
+    
+    let break_points2 = agg_circuit2.break_points();
+
+    // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+    // let _pk = gen_pk(&params, &agg_circuit2, Some(Path::new("examples/agg.pk")));
+    // end_timer!(start0);
+    // let pk = read_pk::<AggregationCircuit>(Path::new("examples/agg.pk"), agg_config2).unwrap();
+    // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+    // let break_points2 = agg_circuit2.break_points();
+
+    let agg_circuit2 = AggregationCircuit::new::<SHPLONK>(
+        CircuitBuilderStage::Prover,
+        agg_config2,
+        &agg_params2,
+        vec![snark3, snark4],
+        VerifierUniversality::Full,
+    ).use_break_points(break_points2.clone());
+
+    println!("Generating aggregation snark");
+    let agg_snark2 = gen_snark_shplonk(&agg_params2, &pk2, agg_circuit2, None::<&str>);
+    println!("Aggregation snark success");
+
+    // Level 2 aggregation
+    // Create an aggregation circuit using the snark
+    let agg_k3 = 16;
+    let agg_lookup_bits3 = agg_k3 - 1;
+    let agg_params3 = gen_srs(agg_k3 as u32);
+    let mut agg_circuit3 = AggregationCircuit::new::<SHPLONK>(
+        CircuitBuilderStage::Keygen,
+        AggregationConfigParams {degree: agg_k3, lookup_bits: agg_lookup_bits3 as usize, ..Default::default()},
+        &agg_params3,
+        vec![agg_snark1.clone(), agg_snark2.clone()],
+        VerifierUniversality::Full
+    );
+
+    println!("Aggregation circuit calculating params");
+    let agg_config3 = agg_circuit3.calculate_params(Some(10));
+
+    // let start0 = start_timer!(|| "gen vk & pk");
+    println!("Aggregation circuit generating pk");
+    let pk3 = gen_pk(&agg_params3, &agg_circuit3, None);
+    
+    let break_points3 = agg_circuit3.break_points();
+
+    // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+    // let _pk = gen_pk(&params, &agg_circuit2, Some(Path::new("examples/agg.pk")));
+    // end_timer!(start0);
+    // let pk = read_pk::<AggregationCircuit>(Path::new("examples/agg.pk"), agg_config3).unwrap();
+    // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
+    // let break_points3 = agg_circuit2.break_points();
+
+    let agg_circuit3 = AggregationCircuit::new::<SHPLONK>(
+        CircuitBuilderStage::Prover,
+        agg_config3,
+        &agg_params3,
+        vec![agg_snark1, agg_snark2],
+        VerifierUniversality::Full,
+    ).use_break_points(break_points3.clone());
+
+    println!("Generating aggregation snark");
+    let _agg_snark3 = gen_snark_shplonk(&agg_params3, &pk3, agg_circuit3, None::<&str>);
+    println!("Aggregation snark success");
+
+}
+
+
 // Note: Apparently MSMs are for generating KZG params rather than proofs.
 // What is the default value for agg params?
 // What is the second agg_config used for?
