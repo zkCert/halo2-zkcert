@@ -58,7 +58,8 @@ impl<F: BigPrimeField + ScalarField> X509CertificateVerifierChip<F> {
 
         // Adapted from halo2-rsa https://github.com/zkemail/halo2-rsa/blob/main/src/lib.rs
         let biguint = rsa_config.biguint_config();
-        let result = sha256_config.clone().digest(ctx, msg)?;
+        // TODO: keep precomputed len 0 for now
+        let result = sha256_config.clone().digest(ctx, msg, None)?;
         let mut hashed_bytes = result.output_bytes;
         hashed_bytes.reverse();
         let bytes_bits = hashed_bytes.len() * 8;
