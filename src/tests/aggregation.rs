@@ -637,7 +637,7 @@ fn test_two_aggregation_split_sha256_rsa() {
     );
 
     // Create an aggregation circuit using the snark
-    let agg_k2 = 16;
+    let agg_k2 = 19;
     let agg_lookup_bits2 = agg_k2 - 1;
     let agg_params2 = gen_srs(agg_k2 as u32);
     let mut agg_circuit2 = AggregationCircuit::new::<SHPLONK>(
