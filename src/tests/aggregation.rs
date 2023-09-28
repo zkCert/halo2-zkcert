@@ -161,7 +161,7 @@ fn generate_rsa_circuit(verify_cert_path: &str, issuer_cert_path: &str) -> Snark
     };
 
     // Circuit inputs
-    let k: usize = 13;
+    let k: usize = 18;
     let limb_bits = 64;
     let default_bits = 2048;
     let exp_bits = 5;
@@ -252,8 +252,8 @@ fn generate_sha256_circuit(verify_cert_path: &str, issuer_cert_path: &str) -> Sn
     issuer_cert_file.read_to_end(&mut issuer_cert_pem_buffer).expect("Failed to read cert 2 PEM file");
 
     // Circuit inputs
-    let k: usize = 13;
-    let max_byte_sizes = vec![192]; // Use precomputed SHA
+    let k: usize = 18;
+    let max_byte_sizes = vec![320]; // Use precomputed SHA
 
     let mut builder = BaseCircuitBuilder::new(false);
     // Set rows
@@ -265,7 +265,7 @@ fn generate_sha256_circuit(verify_cert_path: &str, issuer_cert_path: &str) -> Sn
     let ctx = builder.main(0);
     
     let mut sha256_chip = Sha256Chip::construct(max_byte_sizes, range.clone(), true);
-    let _result = sha256_chip.digest(ctx, &tbs, Some(1088)).unwrap();
+    let _result = sha256_chip.digest(ctx, &tbs, Some(960)).unwrap();
 
     let circuit_params = builder.calculate_params(Some(10));
     println!("Circuit params: {:?}", circuit_params);
