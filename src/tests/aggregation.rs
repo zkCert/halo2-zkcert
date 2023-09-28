@@ -580,12 +580,12 @@ fn test_two_level_aggregation_split_sha256_rsa() {
     let snark1 = generate_sha256_circuit(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
-        16
+        18
     );
     let snark2 = generate_rsa_circuit(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
-        16
+        18
     );
 
     // Create an aggregation circuit using the snark
@@ -633,12 +633,12 @@ fn test_two_level_aggregation_split_sha256_rsa() {
     let snark3 = generate_sha256_circuit(
         "./certs/cert_2.pem",
         "./certs/cert_1.pem",
-        16
+        18
     );
     let snark4 = generate_rsa_circuit(
         "./certs/cert_2.pem",
         "./certs/cert_1.pem",
-        16
+        18
     );
 
     // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
