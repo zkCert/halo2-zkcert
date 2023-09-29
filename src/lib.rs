@@ -13,6 +13,7 @@ use halo2_rsa::{
 use halo2_sha256_unoptimized::Sha256Chip;
 use itertools::Itertools;
 
+mod circuit;
 #[cfg(test)]
 mod tests;
 
