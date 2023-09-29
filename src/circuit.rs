@@ -1,40 +1,16 @@
-use std::vec;
-
 use halo2_base::{
-    halo2_proofs::plonk::Error,
-    gates::{
-        GateInstructions,
-        circuit::{
-            builder::BaseCircuitBuilder, BaseCircuitParams, BaseConfig, CircuitBuilderStage,
-        },
-        flex_gate::{threads::SinglePhaseCoreManager, MultiPhaseThreadBreakPoints},
-        RangeChip,
-    },
+    gates::circuit::CircuitBuilderStage,
     halo2_proofs::{
-        circuit::{Layouter, SimpleFloorPlanner},
-        halo2curves::bn256::{Bn256, Fr, G1Affine},
-        plonk::{self, Circuit, ConstraintSystem, Selector},
-        poly::{commitment::ParamsProver, kzg::commitment::ParamsKZG},
-    },
-    QuantumCell::{Existing, Constant},
-    utils::{ScalarField, BigPrimeField},
-    utils::fs::gen_srs,
-    AssignedValue, Context
+        halo2curves::bn256::Bn256,
+        poly::kzg::commitment::ParamsKZG,
+    }
 };
-use halo2_rsa::{
-    big_uint::BigUintInstructions,
-    RSAConfig,
-    AssignedRSAPublicKey, AssignedRSASignature, RSAInstructions
-};
-use halo2_sha256_unoptimized::Sha256Chip;
 use itertools::Itertools;
 use snark_verifier_sdk::{
     SHPLONK,
-    gen_pk,
-    halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk},
+    halo2::aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit},
     Snark,
 };
-use x509_parser::signature_algorithm;
 
 #[derive(Clone, Debug)]
 pub struct X509VerifierAggregationCircuit {
@@ -42,7 +18,7 @@ pub struct X509VerifierAggregationCircuit {
 }
 
 impl X509VerifierAggregationCircuit {
-    pub fn new<AS>(
+    pub fn new(
         stage: CircuitBuilderStage,
         config_params: AggregationConfigParams,
         params: &ParamsKZG<Bn256>,
@@ -86,46 +62,36 @@ mod test {
     use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
 
     use halo2_base::{
-        halo2_proofs::plonk::Error,
         gates::{
             GateInstructions,
             circuit::{
-                builder::BaseCircuitBuilder, BaseCircuitParams, BaseConfig, CircuitBuilderStage,
+                builder::BaseCircuitBuilder, CircuitBuilderStage,
             },
-            flex_gate::{threads::SinglePhaseCoreManager, MultiPhaseThreadBreakPoints},
-            RangeChip,
-        },
-        halo2_proofs::{
-            circuit::{Layouter, SimpleFloorPlanner},
-            halo2curves::bn256::{Bn256, G1Affine},
-            plonk::{self, Circuit, ConstraintSystem, Selector},
-            poly::{commitment::ParamsProver, kzg::commitment::ParamsKZG},
         },
         QuantumCell::{Existing, Constant},
-        utils::{ScalarField, BigPrimeField},
         utils::fs::gen_srs,
-        AssignedValue, Context
+        AssignedValue
     };
-
     use halo2_rsa::{
-        BigUintConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
+        BigUintConfig, RSAConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
+        big_uint::BigUintInstructions,
     };
-
-    use halo2_base::utils::testing::base_test;
-
-    use rand::{thread_rng, Rng};
-    use rsa::{Hash, PaddingScheme, PublicKeyParts, RsaPrivateKey, RsaPublicKey};
+    use halo2_sha256_unoptimized::Sha256Chip;
+    use snark_verifier_sdk::{
+        gen_pk,
+        halo2::{aggregation::{AggregationConfigParams, VerifierUniversality}, gen_snark_shplonk},
+        Snark,
+    };
     use sha2::{Digest, Sha256};
     use std::fs::File;
     use std::io::Read;
     use std::vec;
     use x509_parser::pem::parse_x509_pem;
-    use x509_parser::certificate::X509Certificate;
     use x509_parser::public_key::PublicKey;
 
     use num_bigint::BigUint;
 
-    fn generate_rsa_circuit(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
+    fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
         // Read the PEM certificate from a file
         let mut cert_file = File::open(verify_cert_path).expect("Failed to open PEM file");
         let mut cert_pem_buffer = Vec::new();
@@ -238,7 +204,7 @@ mod test {
         gen_snark_shplonk(&params, &pk, builder, None::<&str>)
     }
     
-    fn generate_sha256_circuit(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
+    fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
         // Read the PEM certificate from a file
         let mut cert_file = File::open(verify_cert_path).expect("Failed to open PEM file");
         let mut cert_pem_buffer = Vec::new();
@@ -292,34 +258,34 @@ mod test {
     }
     
     #[test]
-    fn test1() {
+    fn test_x509_certificate_verifier_aggregation_circuit() {
         println!("Generating dummy snark");
-        let snark1 = generate_sha256_circuit(
+        let snark1 = generate_sha256_circuit_with_instances(
             "./certs/cert_3.pem",
             "./certs/cert_2.pem",
             16
         );
-        let snark2 = generate_rsa_circuit(
+        let snark2 = generate_rsa_circuit_with_instances(
             "./certs/cert_3.pem",
             "./certs/cert_2.pem",
             16
         );
-        let snark3 = generate_sha256_circuit(
+        let snark3 = generate_sha256_circuit_with_instances(
             "./certs/cert_2.pem",
             "./certs/cert_1.pem",
             16
         );
-        let snark4 = generate_rsa_circuit(
+        let snark4 = generate_rsa_circuit_with_instances(
             "./certs/cert_2.pem",
             "./certs/cert_1.pem",
             16
         );
 
-        // Create an aggregation circuit using the snark
+        // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
         let agg_k = 20;
         let agg_lookup_bits = agg_k - 1;
         let agg_params = gen_srs(agg_k as u32);
-        let mut agg_circuit = X509VerifierAggregationCircuit::new::<SHPLONK>(
+        let mut agg_circuit = X509VerifierAggregationCircuit::new(
             CircuitBuilderStage::Keygen,
             AggregationConfigParams {degree: agg_k, lookup_bits: agg_lookup_bits as usize, ..Default::default()},
             &agg_params,
@@ -336,14 +302,7 @@ mod test {
         
         let break_points = agg_circuit.break_points();
 
-        // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
-        // let _pk = gen_pk(&params, &agg_circuit, Some(Path::new("examples/agg.pk")));
-        // end_timer!(start0);
-        // let pk = read_pk::<AggregationCircuit>(Path::new("examples/agg.pk"), agg_config).unwrap();
-        // std::fs::remove_file(Path::new("examples/agg.pk")).ok();
-        // let break_points = agg_circuit.break_points();
-
-        let agg_circuit = X509VerifierAggregationCircuit::new::<SHPLONK>(
+        let agg_circuit = X509VerifierAggregationCircuit::new(
             CircuitBuilderStage::Prover,
             agg_config,
             &agg_params,
