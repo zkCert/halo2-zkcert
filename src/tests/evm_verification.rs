@@ -5,7 +5,7 @@ use halo2_base::{
     halo2_proofs::halo2curves::bn256::Fr,
     gates::{
         circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
-        GateInstructions, RangeInstructions
+        GateInstructions
     },
     utils::fs::gen_srs
 };
@@ -20,8 +20,6 @@ use snark_verifier_sdk::{
     CircuitExt
 };
 
-use rand::{thread_rng, Rng};
-use rsa::{Hash, PaddingScheme, PublicKeyParts, RsaPrivateKey, RsaPublicKey};
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Read;
