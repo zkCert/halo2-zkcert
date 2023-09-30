@@ -126,7 +126,6 @@ fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path:
     // Insert input hash as public instance for circuit
     hashed_bytes.reverse();
     builder.assigned_instances[0].extend(hashed_bytes);
-    println!("Input bytes: {:?}", builder.assigned_instances);
 
     let circuit_params = builder.calculate_params(Some(10));
     println!("Circuit params: {:?}", circuit_params);
@@ -179,7 +178,6 @@ fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_pa
 
     // Insert output hash as public instance for circuit
     builder.assigned_instances[0].extend(result.output_bytes);
-    println!("Output bytes: {:?}", builder.assigned_instances);
 
     let circuit_params = builder.calculate_params(Some(10));
     println!("Circuit params: {:?}", circuit_params);
@@ -222,7 +220,7 @@ fn test_x509_verifier_aggregation_circuit_evm_verification() {
     );
 
     // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
-    let agg_k = 20;
+    let agg_k = 23;
     let agg_lookup_bits = agg_k - 1;
     let agg_params = gen_srs(agg_k as u32);
     let mut agg_circuit = X509VerifierAggregationCircuit::new(
