@@ -186,7 +186,6 @@ mod test {
         // Insert input hash as public instance for circuit
         hashed_bytes.reverse();
         builder.assigned_instances[0].extend(hashed_bytes);
-        println!("Input bytes: {:?}", builder.assigned_instances);
 
         let circuit_params = builder.calculate_params(Some(10));
         println!("Circuit params: {:?}", circuit_params);
@@ -223,7 +222,7 @@ mod test {
         issuer_cert_file.read_to_end(&mut issuer_cert_pem_buffer).expect("Failed to read cert 2 PEM file");
     
         // Circuit inputs
-        let max_byte_sizes = vec![192]; // Use precomputed SHA
+        let max_byte_sizes = vec![320]; // Use precomputed SHA
     
         let mut builder = BaseCircuitBuilder::new(false);
         // Set rows
@@ -235,11 +234,10 @@ mod test {
         let ctx = builder.main(0);
         
         let mut sha256_chip = Sha256Chip::construct(max_byte_sizes, range.clone(), true);
-        let result = sha256_chip.digest(ctx, &tbs, Some(1088)).unwrap();
+        let result = sha256_chip.digest(ctx, &tbs, Some(960)).unwrap();
     
         // Insert output hash as public instance for circuit
         builder.assigned_instances[0].extend(result.output_bytes);
-        println!("Output bytes: {:?}", builder.assigned_instances);
 
         let circuit_params = builder.calculate_params(Some(10));
         println!("Circuit params: {:?}", circuit_params);
@@ -282,7 +280,7 @@ mod test {
         );
 
         // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
-        let agg_k = 20;
+        let agg_k = 23;
         let agg_lookup_bits = agg_k - 1;
         let agg_params = gen_srs(agg_k as u32);
         let mut agg_circuit = X509VerifierAggregationCircuit::new(
