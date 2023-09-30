@@ -162,7 +162,7 @@ fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_pa
     issuer_cert_file.read_to_end(&mut issuer_cert_pem_buffer).expect("Failed to read cert 2 PEM file");
 
     // Circuit inputs
-    let max_byte_sizes = vec![192]; // Use precomputed SHA
+    let max_byte_sizes = vec![320]; // Use precomputed SHA
 
     let mut builder = BaseCircuitBuilder::new(false);
     // Set rows
@@ -174,7 +174,7 @@ fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_pa
     let ctx = builder.main(0);
     
     let mut sha256_chip = Sha256Chip::construct(max_byte_sizes, range.clone(), true);
-    let result = sha256_chip.digest(ctx, &tbs, Some(1088)).unwrap();
+    let result = sha256_chip.digest(ctx, &tbs, Some(960)).unwrap();
 
     // Insert output hash as public instance for circuit
     builder.assigned_instances[0].extend(result.output_bytes);
@@ -201,26 +201,26 @@ fn test_x509_verifier_aggregation_circuit_evm_verification() {
     let snark1 = generate_sha256_circuit_with_instances(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
-        16
+        17
     );
     let snark2 = generate_rsa_circuit_with_instances(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
-        16
+        17
     );
     let snark3 = generate_sha256_circuit_with_instances(
         "./certs/cert_2.pem",
         "./certs/cert_1.pem",
-        16
+        17
     );
     let snark4 = generate_rsa_circuit_with_instances(
         "./certs/cert_2.pem",
         "./certs/cert_1.pem",
-        16
+        17
     );
 
     // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
-    let agg_k = 23;
+    let agg_k = 22;
     let agg_lookup_bits = agg_k - 1;
     let agg_params = gen_srs(agg_k as u32);
     let mut agg_circuit = X509VerifierAggregationCircuit::new(
