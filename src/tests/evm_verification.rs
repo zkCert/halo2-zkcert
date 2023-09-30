@@ -1,17 +1,20 @@
-use crate::{*, circuit::X509VerifierAggregationCircuit};
+use crate::X509VerifierAggregationCircuit;
 use std::path::Path;
 
 use halo2_base::{
+    AssignedValue,
     halo2_proofs::halo2curves::bn256::Fr,
     gates::{
         circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
         GateInstructions
     },
+    QuantumCell::{Existing, Constant},
     utils::fs::gen_srs
 };
 use halo2_rsa::{
-    BigUintConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
+    BigUintConfig, BigUintInstructions, RSAInstructions, RSAConfig, RSAPubE, RSAPublicKey, RSASignature,
 };
+use halo2_sha256_unoptimized::Sha256Chip;
 use snark_verifier_sdk::{
     gen_pk,
     halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk},
@@ -26,8 +29,8 @@ use std::io::Read;
 use std::vec;
 use x509_parser::pem::parse_x509_pem;
 use x509_parser::public_key::PublicKey;
-
 use num_bigint::BigUint;
+use itertools::Itertools;
 
 fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
     // Read the PEM certificate from a file

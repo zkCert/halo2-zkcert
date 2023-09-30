@@ -1,5 +1,7 @@
 use crate::*;
+
 use halo2_base::{
+    QuantumCell::{Existing, Constant},
     halo2_proofs::halo2curves::bn256::Fr,
     gates::{
         circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
@@ -8,8 +10,9 @@ use halo2_base::{
     utils::fs::gen_srs
 };
 use halo2_rsa::{
-    BigUintConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
+    BigUintConfig, BigUintInstructions, RSAConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
 };
+use halo2_sha256_unoptimized::Sha256Chip;
 use snark_verifier_sdk::{
     SHPLONK,
     gen_pk,
@@ -769,8 +772,3 @@ fn test_two_level_aggregation_split_sha256_rsa() {
     println!("Aggregation snark success");
 
 }
-
-
-// Note: Apparently MSMs are for generating KZG params rather than proofs.
-// What is the default value for agg params?
-// What is the second agg_config used for?
