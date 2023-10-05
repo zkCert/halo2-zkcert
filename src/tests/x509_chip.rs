@@ -1,8 +1,9 @@
-use crate::*;
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+use crate::{X509CertificateVerifierChip, SignatureAlgorithm, HashFunction};
+use halo2_base::{halo2_proofs::halo2curves::bn256::Fr, gates::GateInstructions};
 use halo2_rsa::{
-    BigUintConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
+    BigUintConfig, BigUintInstructions, RSAConfig, RSAInstructions, RSAPubE, RSAPublicKey, RSASignature,
 };
+use halo2_sha256_unoptimized::Sha256Chip;
 use halo2_base::utils::testing::base_test;
 use rand::{thread_rng, Rng};
 use rsa::{Hash, PaddingScheme, PublicKeyParts, RsaPrivateKey, RsaPublicKey};

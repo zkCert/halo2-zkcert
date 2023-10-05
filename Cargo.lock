@@ -165,6 +165,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "array-init"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d62b7694a562cdf5a74227903507c56ab2cc8bdd1f781ed5cb4cf9c9f810bfc"
+
+[[package]]
 name = "arrayref"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -348,6 +354,9 @@ name = "bytes"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2bd12c1caf447e69cd4528f47f94d203fd2582878ecb9e9465484c4148a8223"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "cast"
@@ -369,6 +378,15 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "chrono"
+version = "0.4.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "ciborium"
@@ -437,6 +455,18 @@ checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
 dependencies = [
  "cfg-if",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "const-hex"
+version = "1.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c37be52ef5e3b394db27a2341010685ad5103c72ac15ce2e9420a7e8f93f342c"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "hex",
+ "serde",
 ]
 
 [[package]]
@@ -727,6 +757,7 @@ dependencies = [
  "elliptic-curve",
  "rfc6979",
  "signature",
+ "spki 0.7.2",
 ]
 
 [[package]]
@@ -747,6 +778,7 @@ dependencies = [
  "ff",
  "generic-array",
  "group",
+ "pkcs8 0.10.2",
  "rand_core",
  "sec1",
  "subtle",
@@ -805,6 +837,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ethabi"
+version = "18.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7413c5f74cc903ea37386a8965a936cbeb334bd270862fdece542c1b2dcbc898"
+dependencies = [
+ "ethereum-types",
+ "hex",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha3 0.10.8",
+ "thiserror",
+ "uint",
+]
+
+[[package]]
 name = "ethbloom"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -812,6 +861,10 @@ checksum = "c22d4b5885b6aa2fe5e8b9329fb8d232bf739e434e6b87347c63bdd00c120f60"
 dependencies = [
  "crunchy",
  "fixed-hash",
+ "impl-codec",
+ "impl-rlp",
+ "impl-serde",
+ "scale-info",
  "tiny-keccak",
 ]
 
@@ -823,9 +876,46 @@ checksum = "02d215cbf040552efcbe99a38372fe80ab9d00268e20012b79fcd0f073edd8ee"
 dependencies = [
  "ethbloom",
  "fixed-hash",
+ "impl-codec",
+ "impl-rlp",
+ "impl-serde",
  "primitive-types",
+ "scale-info",
  "uint",
 ]
+
+[[package]]
+name = "ethers-core"
+version = "2.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0a17f0708692024db9956b31d7a20163607d2745953f5ae8125ab368ba280ad"
+dependencies = [
+ "arrayvec",
+ "bytes",
+ "chrono",
+ "const-hex",
+ "elliptic-curve",
+ "ethabi",
+ "generic-array",
+ "k256",
+ "num_enum",
+ "open-fastrlp",
+ "rand",
+ "rlp",
+ "serde",
+ "serde_json",
+ "strum",
+ "tempfile",
+ "thiserror",
+ "tiny-keccak",
+ "unicode-xid",
+]
+
+[[package]]
+name = "fastrand"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25cbce373ec4653f1a01a31e8a5e5ec0c622dc27ff9c4e6606eefef5cbbed4a5"
 
 [[package]]
 name = "fastrlp"
@@ -959,11 +1049,72 @@ dependencies = [
 ]
 
 [[package]]
+name = "halo2-base"
+version = "0.4.0"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop#addfbec5b6e4a60b996b8d28a12194a70dec4b43"
+dependencies = [
+ "getset",
+ "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git)",
+ "itertools 0.11.0",
+ "log",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "poseidon-rs",
+ "rand_chacha",
+ "rayon",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "halo2-base"
+version = "0.4.0"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=feat/zkevm-sha256#adf331ecdd8ae492bced80d3157ae9c3b66fde04"
+dependencies = [
+ "ark-std 0.3.0",
+ "getset",
+ "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git)",
+ "itertools 0.11.0",
+ "log",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "poseidon-rs",
+ "rand",
+ "rand_chacha",
+ "rayon",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "halo2-ecc"
 version = "0.4.0"
 source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#980b39bcca5b3327aaef6c8d73577d9381bfa899"
 dependencies = [
- "halo2-base",
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
+ "itertools 0.10.5",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand",
+ "rand_chacha",
+ "rand_core",
+ "rayon",
+ "serde",
+ "serde_json",
+ "test-case",
+]
+
+[[package]]
+name = "halo2-ecc"
+version = "0.4.0"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop#addfbec5b6e4a60b996b8d28a12194a70dec4b43"
+dependencies = [
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop)",
  "itertools 0.10.5",
  "num-bigint",
  "num-integer",
@@ -983,8 +1134,8 @@ version = "0.1.0"
 source = "git+https://github.com/zkpdf/halo2-rsa.git?branch=main#cec7f8a6092cf1512107680598b88d44485579d8"
 dependencies = [
  "env_logger",
- "halo2-base",
- "halo2-ecc",
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
+ "halo2-ecc 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
  "num-bigint",
  "num-traits",
  "rand",
@@ -1001,7 +1152,7 @@ dependencies = [
  "env_logger",
  "generic-array",
  "getrandom",
- "halo2-base",
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
  "hex",
  "itertools 0.10.5",
  "num-bigint",
@@ -1021,7 +1172,8 @@ dependencies = [
  "criterion",
  "env_logger",
  "getrandom",
- "halo2-base",
+ "getset",
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
  "halo2-rsa",
  "halo2-sha256-unoptimized",
  "itertools 0.10.5",
@@ -1035,6 +1187,7 @@ dependencies = [
  "sha2",
  "snark-verifier-sdk",
  "x509-parser",
+ "zkevm-hashes",
 ]
 
 [[package]]
@@ -1138,6 +1291,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c6201b9ff9fd90a5a3bac2e56a830d0caa509576f0e503818ee82c181b3437a"
 
 [[package]]
+name = "heck"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1189,6 +1348,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba6a270039626615617f3f36d15fc827041df3b78c439da2cadfa47455a77f2f"
 dependencies = [
  "parity-scale-codec",
+]
+
+[[package]]
+name = "impl-rlp"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f28220f89297a075ddc7245cd538076ee98b01f2a9c23a53a4f1105d5a322808"
+dependencies = [
+ "rlp",
+]
+
+[[package]]
+name = "impl-serde"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebc88fc67028ae3db0c853baa36269d398d5f45b6982f95549ff5def78c935cd"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -1275,6 +1452,7 @@ dependencies = [
  "cfg-if",
  "ecdsa",
  "elliptic-curve",
+ "once_cell",
  "sha2",
 ]
 
@@ -1458,6 +1636,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "num_enum"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70bf6736f74634d299d00086f02986875b3c2d924781a6a2cb6c201e73da0ceb"
+dependencies = [
+ "num_enum_derive",
+]
+
+[[package]]
+name = "num_enum_derive"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56ea360eafe1022f7cc56cd7b869ed57330fb2453d0c7831d99b74c65d2f5597"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.37",
+]
+
+[[package]]
 name = "oid-registry"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1483,6 +1682,31 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
+
+[[package]]
+name = "open-fastrlp"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "786393f80485445794f6043fd3138854dd109cc6c4bd1a6383db304c9ce9b9ce"
+dependencies = [
+ "arrayvec",
+ "auto_impl",
+ "bytes",
+ "ethereum-types",
+ "open-fastrlp-derive",
+]
+
+[[package]]
+name = "open-fastrlp-derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "003b2be5c6c53c1cfeb0a238b8a1c3915cd410feb684457a36c10038f764bb1c"
+dependencies = [
+ "bytes",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
 
 [[package]]
 name = "openssl"
@@ -1617,7 +1841,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a78f66c04ccc83dd4486fd46c33896f4e17b24a7a3a6400dedc48ed0ddd72320"
 dependencies = [
  "der 0.5.1",
- "pkcs8",
+ "pkcs8 0.8.0",
  "zeroize",
 ]
 
@@ -1628,8 +1852,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7cabda3fb821068a9a4fab19a683eac3af12edf0f34b94a8be53c4972b8149d0"
 dependencies = [
  "der 0.5.1",
- "spki",
+ "spki 0.5.4",
  "zeroize",
+]
+
+[[package]]
+name = "pkcs8"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f950b2377845cebe5cf8b5165cb3cc1a5e0fa5cfa3e1f7f55707d8fd82e0a7b7"
+dependencies = [
+ "der 0.7.8",
+ "spki 0.7.2",
 ]
 
 [[package]]
@@ -1694,6 +1928,9 @@ checksum = "9f3486ccba82358b11a77516035647c34ba167dfa53312630de83b12bd4f3d66"
 dependencies = [
  "fixed-hash",
  "impl-codec",
+ "impl-rlp",
+ "impl-serde",
+ "scale-info",
  "uint",
 ]
 
@@ -1829,6 +2066,15 @@ checksum = "5ce3fb6ad83f861aac485e76e1985cd109d9a3713802152be56c3b1f0e0658ed"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "redox_syscall"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "567664f262709473930a4bf9e51bf2ebf3348f2e748ccc50dea20646858f8f29"
+dependencies = [
+ "bitflags 1.3.2",
 ]
 
 [[package]]
@@ -1968,7 +2214,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb919243f34364b6bd2fc10ef797edbfa75f33c252e7998527479c6d6b47e1ec"
 dependencies = [
  "bytes",
+ "rlp-derive",
  "rustc-hex",
+]
+
+[[package]]
+name = "rlp-derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e33d7b2abe0c340d8797fe2907d3f20d3b5ea5908683618bfe80df7f621f672a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -1984,7 +2242,7 @@ dependencies = [
  "num-iter",
  "num-traits",
  "pkcs1",
- "pkcs8",
+ "pkcs8 0.8.0",
  "rand_core",
  "serde",
  "smallvec",
@@ -2074,6 +2332,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustversion"
+version = "1.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ffc183a10b4478d04cbbbfc96d0873219d962dd5accaff2ffbd4ceb7df837f4"
+
+[[package]]
 name = "ryu"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2086,6 +2350,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "scale-info"
+version = "2.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35c0a159d0c45c12b20c5a844feb1fe4bea86e28f17b92a5f0c42193634d3782"
+dependencies = [
+ "cfg-if",
+ "derive_more",
+ "parity-scale-codec",
+ "scale-info-derive",
+]
+
+[[package]]
+name = "scale-info-derive"
+version = "2.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "912e55f6d20e0e80d63733872b40e1227c0bce1e1ab81ba67d696339bfd7fd29"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -2103,6 +2391,7 @@ dependencies = [
  "base16ct",
  "der 0.7.8",
  "generic-array",
+ "pkcs8 0.10.2",
  "subtle",
  "zeroize",
 ]
@@ -2252,8 +2541,8 @@ name = "snark-verifier"
 version = "0.1.6"
 source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=community-edition#7011e8ce0c2f7e79ab9629aa528cfb6837cdeafe"
 dependencies = [
- "halo2-base",
- "halo2-ecc",
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
+ "halo2-ecc 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
  "hex",
  "itertools 0.11.0",
  "lazy_static",
@@ -2268,6 +2557,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "snark-verifier"
+version = "0.1.7"
+source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=develop#624b003c656e44b14202d4b8a16a2f7bc4e71eeb"
+dependencies = [
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop)",
+ "halo2-ecc 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=develop)",
+ "hex",
+ "itertools 0.11.0",
+ "lazy_static",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "pairing",
+ "rand",
+ "serde",
+]
+
+[[package]]
 name = "snark-verifier-sdk"
 version = "0.1.6"
 source = "git+https://github.com/axiom-crypto/snark-verifier.git?branch=community-edition#7011e8ce0c2f7e79ab9629aa528cfb6837cdeafe"
@@ -2276,7 +2583,7 @@ dependencies = [
  "bincode",
  "ethereum-types",
  "getset",
- "halo2-base",
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
  "hex",
  "itertools 0.10.5",
  "lazy_static",
@@ -2287,7 +2594,7 @@ dependencies = [
  "rand_chacha",
  "serde",
  "serde_json",
- "snark-verifier",
+ "snark-verifier 0.1.6",
 ]
 
 [[package]]
@@ -2307,10 +2614,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "spki"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d1e996ef02c474957d681f1b05213dfb0abab947b446a62d37770b23500184a"
+dependencies = [
+ "base64ct",
+ "der 0.7.8",
+]
+
+[[package]]
 name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "strum"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
+dependencies = [
+ "strum_macros",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.25.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad8d03b598d3d0fff69bf533ee3ef19b8eeb342729596df84bcc7e1f96ec4059"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.37",
+]
 
 [[package]]
 name = "substrate-bn"
@@ -2370,6 +2709,19 @@ name = "tap"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
+
+[[package]]
+name = "tempfile"
+version = "3.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb94d2f3cc536af71caac6b6fcebf65860b347e7ce0cc9ebe8f70d3e521054ef"
+dependencies = [
+ "cfg-if",
+ "fastrand",
+ "redox_syscall",
+ "rustix",
+ "windows-sys",
+]
 
 [[package]]
 name = "termcolor"
@@ -2834,4 +3186,23 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.37",
+]
+
+[[package]]
+name = "zkevm-hashes"
+version = "0.2.0"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=feat/zkevm-sha256#adf331ecdd8ae492bced80d3157ae9c3b66fde04"
+dependencies = [
+ "array-init",
+ "ethers-core",
+ "getset",
+ "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=feat/zkevm-sha256)",
+ "itertools 0.11.0",
+ "lazy_static",
+ "log",
+ "num-bigint",
+ "rand",
+ "rayon",
+ "sha3 0.10.8",
+ "snark-verifier 0.1.7",
 ]
