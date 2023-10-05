@@ -15,6 +15,7 @@ use halo2_rsa::{
     BigUintConfig, BigUintInstructions, RSAInstructions, RSAConfig, RSAPubE, RSAPublicKey, RSASignature,
 };
 use halo2_sha256_unoptimized::Sha256Chip;
+use zkevm_hashes::sha256::*;
 use snark_verifier_sdk::{
     gen_pk,
     halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk},
