@@ -690,16 +690,16 @@ fn test_aggregation_split_zkevm_sha256_rsa1() {
     let snark1 = generate_zkevm_sha256_circuit(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
-        18
+        16
     );
     let snark2 = generate_rsa_circuit(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
-        18
+        16
     );
 
     // Create an aggregation circuit using the snark
-    let agg_k = 16;
+    let agg_k = 20;
     let agg_lookup_bits = agg_k - 1;
     let agg_params = gen_srs(agg_k as u32);
     let mut agg_circuit = AggregationCircuit::new::<SHPLONK>(
