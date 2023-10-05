@@ -695,7 +695,7 @@ fn test_aggregation_split_zkevm_sha256_rsa1() {
     let snark2 = generate_rsa_circuit(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
-        13
+        16
     );
 
     // Create an aggregation circuit using the snark
