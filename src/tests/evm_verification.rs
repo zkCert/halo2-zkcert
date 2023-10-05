@@ -3,7 +3,7 @@ use std::path::Path;
 
 use halo2_base::{
     AssignedValue,
-    halo2_proofs::halo2curves::bn256::Fr,
+    halo2_proofs::{halo2curves::bn256::Fr, plonk::{Column, Instance}},
     gates::{
         circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
         GateInstructions
@@ -32,6 +32,7 @@ use x509_parser::pem::parse_x509_pem;
 use x509_parser::public_key::PublicKey;
 use num_bigint::BigUint;
 use itertools::Itertools;
+use std::cell::RefCell;
 
 fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
     // Read the PEM certificate from a file
