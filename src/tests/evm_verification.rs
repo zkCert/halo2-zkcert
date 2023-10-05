@@ -3,7 +3,7 @@ use std::path::Path;
 
 use halo2_base::{
     AssignedValue,
-    halo2_proofs::halo2curves::bn256::Fr,
+    halo2_proofs::{halo2curves::bn256::Fr, plonk::{Column, Instance}},
     gates::{
         circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
         GateInstructions
@@ -14,7 +14,7 @@ use halo2_base::{
 use halo2_rsa::{
     BigUintConfig, BigUintInstructions, RSAInstructions, RSAConfig, RSAPubE, RSAPublicKey, RSASignature,
 };
-use halo2_sha256_unoptimized::Sha256Chip;
+use zkevm_hashes::sha256::*;
 use snark_verifier_sdk::{
     gen_pk,
     halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk},
@@ -31,6 +31,7 @@ use x509_parser::pem::parse_x509_pem;
 use x509_parser::public_key::PublicKey;
 use num_bigint::BigUint;
 use itertools::Itertools;
+use std::cell::RefCell;
 
 fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
     // Read the PEM certificate from a file
@@ -144,7 +145,7 @@ fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path:
     gen_snark_shplonk(&params, &pk, builder, None::<&str>)
 }
 
-fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
+fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
     // Read the PEM certificate from a file
     let mut cert_file = File::open(verify_cert_path).expect("Failed to open PEM file");
     let mut cert_pem_buffer = Vec::new();
@@ -155,64 +156,213 @@ fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_pa
     let cert = cert_pem.parse_x509().expect("Failed to parse PEM certificate");
 
     // Extract the TBS (To-Be-Signed) data from the certificate 3
-    let tbs = &cert.tbs_certificate.as_ref();
+    let tbs = cert.tbs_certificate.as_ref();
     println!("TBS (To-Be-Signed) Length: {:x?}", tbs.len().to_string());
 
     let mut issuer_cert_file = File::open(issuer_cert_path).expect("Failed to open cert 2PEM file");
     let mut issuer_cert_pem_buffer = Vec::new();
     issuer_cert_file.read_to_end(&mut issuer_cert_pem_buffer).expect("Failed to read cert 2 PEM file");
 
-    // Circuit inputs
-    let max_byte_sizes = vec![320]; // Use precomputed SHA
+    // Generate Sha256BitCircuit
+    use zkevm_hashes::util::eth_types::Field;
+    use std::marker::PhantomData;
+    use vanilla::{
+        columns::Sha256CircuitConfig,
+        param::SHA256_NUM_ROWS,
+        util::{get_num_sha2_blocks, get_sha2_capacity},
+        witness::AssignedSha256Block,
+    };
+    use halo2_base::halo2_proofs::{
+        circuit::SimpleFloorPlanner,
+        dev::MockProver,
+        halo2curves::bn256::Fr,
+        plonk::Circuit,
+        plonk::{keygen_pk, keygen_vk},
+    };
+    use halo2_base::{
+        halo2_proofs::{
+            circuit::Layouter,
+            plonk::{Assigned, ConstraintSystem, Error},
+        },
+        utils::{
+            fs::gen_srs,
+            halo2::Halo2AssignedCell,
+            testing::{check_proof, gen_proof},
+            value_to_option,
+        },
+    };
+    use snark_verifier_sdk::{CircuitExt, SHPLONK};
 
-    let mut builder = BaseCircuitBuilder::new(false);
-    // Set rows
-    builder.set_k(k);
-    builder.set_lookup_bits(k - 1);
-    builder.set_instance_columns(1);
+    #[derive(Clone)]
+    pub struct Sha256BitCircuitConfig<F: Field> {
+        sha256_circuit_config: Sha256CircuitConfig<F>,
+        #[allow(dead_code)]
+        instance: Vec<Column<Instance>>,
+    }
 
-    let range = builder.range_chip();
-    let ctx = builder.main(0);
-    
-    let mut sha256_chip = Sha256Chip::construct(max_byte_sizes, range.clone(), true);
-    let result = sha256_chip.digest(ctx, &tbs, Some(960)).unwrap();
+    #[derive(Default)]
+    pub struct Sha256BitCircuit<F: Field> {
+        inputs: Vec<Vec<u8>>,
+        num_rows: Option<usize>,
+        verify_output: bool,
+        instances: RefCell<Vec<u8>>,
+        _marker: PhantomData<F>,
+    }
 
-    // Insert output hash as public instance for circuit
-    builder.assigned_instances[0].extend(result.output_bytes);
+    impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
+        type Config = Sha256BitCircuitConfig<F>;
+        type FloorPlanner = SimpleFloorPlanner;
+        type Params = ();
 
-    let circuit_params = builder.calculate_params(Some(10));
-    println!("Circuit params: {:?}", circuit_params);
-    let builder = builder.use_params(circuit_params);
+        fn without_witnesses(&self) -> Self {
+            unimplemented!()
+        }
+
+        fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
+            let sha256_circuit_config = Sha256CircuitConfig::new(meta);
+            let instance = meta.instance_column();
+            meta.enable_equality(instance);
+            Self::Config { sha256_circuit_config, instance: vec![instance] }
+        }
+
+        fn synthesize(
+            &self,
+            config: Self::Config,
+            mut layouter: impl Layouter<F>,
+        ) -> Result<(), Error> {
+            layouter.assign_region(
+                || "SHA256 Bit Circuit",
+                |mut region| {
+                    let start = std::time::Instant::now();
+                    let blocks = config.sha256_circuit_config.multi_sha256(
+                        &mut region,
+                        self.inputs.clone(),
+                        self.num_rows.map(get_sha2_capacity),
+                    );
+                    println!("Witness generation time: {:?}", start.elapsed());
+
+                    if self.verify_output {
+                        self.verify_output_witness(&blocks);
+                    }
+                    
+                    {
+                        println!("Num advice columns: 18"); // fixed at 18
+                        println!("Num rows: {:?}", self.num_rows);
+                    }
+                    
+                    Ok(())
+                },
+            )
+        }
+    }
+
+    impl<F: Field> Sha256BitCircuit<F> {
+        /// Creates a new circuit instance
+        pub fn new(num_rows: Option<usize>, inputs: Vec<Vec<u8>>, verify_output: bool) -> Self {
+            Sha256BitCircuit { num_rows, inputs, verify_output, instances: vec![].into(), _marker: PhantomData }
+        }
+
+        fn verify_output_witness(&self, assigned_blocks: &[AssignedSha256Block<F>]) -> Vec<u8> {
+            let mut input_offset = 0;
+            let mut input = vec![];
+            let extract_value = |a: Halo2AssignedCell<F>| {
+                let value = *value_to_option(a.value()).unwrap();
+                #[cfg(feature = "halo2-axiom")]
+                let value = *value;
+                #[cfg(not(feature = "halo2-axiom"))]
+                let value = value.clone();
+                match value {
+                    Assigned::Trivial(v) => v,
+                    Assigned::Zero => F::ZERO,
+                    Assigned::Rational(a, b) => a * b.invert().unwrap(),
+                }
+            };
+            let mut final_output = vec![];
+            for input_block in assigned_blocks {
+                let is_final = input_block.is_final().clone();
+                let output = input_block.output().clone();
+                let word_values = input_block.word_values().clone();
+                let length = input_block.length().clone();
+                let [is_final, output_lo, output_hi, length] =
+                    [is_final, output.lo(), output.hi(), length].map(extract_value);
+                let word_values = word_values.iter().cloned().map(extract_value).collect::<Vec<_>>();
+                for word in word_values {
+                    let word = word.get_lower_32().to_le_bytes();
+                    input.extend_from_slice(&word);
+                }
+                let is_final = is_final == F::ONE;
+                if is_final {
+                    let empty = vec![];
+                    let true_input = self.inputs.get(input_offset).unwrap_or(&empty);
+                    let true_length = true_input.len();
+                    assert_eq!(length.get_lower_64(), true_length as u64, "Length does not match");
+                    // clear global input and make it local
+                    let mut input = std::mem::take(&mut input);
+                    input.truncate(true_length);
+                    assert_eq!(&input, true_input, "Inputs do not match");
+                    let output_lo = output_lo.to_repr(); // u128 as 32 byte LE
+                    let output_hi = output_hi.to_repr();
+                    let mut output = [&output_lo[..16], &output_hi[..16]].concat();
+                    output.reverse(); // = [output_hi_be, output_lo_be].concat()
+
+                    let mut hasher = Sha256::new();
+                    hasher.update(true_input);
+                    assert_eq!(output, hasher.finalize().to_vec(), "Outputs do not match");
+
+                    input_offset += 1;
+                    final_output = output;
+                }
+            }
+            // Populate instances
+            self.instances.borrow_mut().extend(final_output.clone());
+
+            println!("Final output of sha256 hash: {:?}", final_output);
+            
+            final_output
+        }
+    }
+
+    impl CircuitExt<Fr> for Sha256BitCircuit<Fr> {
+        fn num_instance(&self) -> Vec<usize> {
+            vec![self.instances.borrow().len()]
+        }
+
+        fn instances(&self) -> Vec<Vec<Fr>> {
+            vec![self.instances.borrow().iter().map(|x| Fr::from(*x as u64)).collect_vec()]
+        }
+    }
 
     // Generate params
     println!("Generate params");
     let params = gen_srs(k as u32);
     
     // println!("Generating proving key");
-    let pk = gen_pk(&params, &builder, None);
-
+    let dummy_circuit = Sha256BitCircuit::new(Some(2usize.pow(k as u32) - 109), vec![], false);
+    let pk = gen_pk(&params, &dummy_circuit, None);
+    
     // Generate proof
     println!("Generating proof");
-    gen_snark_shplonk(&params, &pk, builder, None::<&str>)
+    let sha256_bit_circuit = Sha256BitCircuit::new(Some(2usize.pow(k as u32) - 109), vec![tbs.to_vec()], true);
+    gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
 }
 
 #[test]
-fn test_x509_verifier_aggregation_circuit_evm_verification() {
+fn test_x509_verifier_aggregation_circuit_evm_verification1() {
     println!("Generating dummy snark");
-    let snark1 = generate_sha256_circuit_with_instances(
+    let snark1 = generate_zkevm_sha256_circuit_with_instance(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
-        17
+        11
     );
     let snark2 = generate_rsa_circuit_with_instances(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
         17
     );
-    let snark3 = generate_sha256_circuit_with_instances(
+    let snark3 = generate_zkevm_sha256_circuit_with_instance(
         "./certs/cert_2.pem",
         "./certs/cert_1.pem",
-        17
+        11
     );
     let snark4 = generate_rsa_circuit_with_instances(
         "./certs/cert_2.pem",
@@ -221,7 +371,7 @@ fn test_x509_verifier_aggregation_circuit_evm_verification() {
     );
 
     // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
-    let agg_k = 22;
+    let agg_k = 23;
     let agg_lookup_bits = agg_k - 1;
     let agg_params = gen_srs(agg_k as u32);
     let mut agg_circuit = X509VerifierAggregationCircuit::new(
@@ -272,5 +422,4 @@ fn test_x509_verifier_aggregation_circuit_evm_verification() {
     evm_verify(deployment_code, instances, proof);
 
 }
-
 
