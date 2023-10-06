@@ -141,18 +141,22 @@ impl<F: Field> Sha256BitCircuit<F> {
 
                 let mut hasher = Sha256::new();
                 hasher.update(true_input);
-                assert_eq!(output, hasher.finalize().to_vec(), "Outputs do not match");
+                println!("input: {:?}", true_input);
+                let a = hasher.finalize().to_vec();
+                println!("output: {:?}", a);
+                println!("output circuit: {:?}", output);
+                assert_eq!(output, a, "Outputs do not match");
 
                 input_offset += 1;
-                final_output = output;
+                final_output.push(output);
             }
         }
         // Populate instances
-        self.instances.borrow_mut().extend(final_output.clone());
+        self.instances.borrow_mut().extend(final_output[0].clone());
 
-        println!("Final output of sha256 hash: {:?}", final_output);
+        println!("Final output of sha256 hash: {:?}", final_output[0]);
         
-        final_output
+        final_output[0].clone()
     }
 }
 
