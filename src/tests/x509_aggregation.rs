@@ -89,6 +89,7 @@ fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path:
 
     // Hash in pure Rust vs in-circuit
     let hashed_tbs = Sha256::digest(tbs);
+    println!("Hashed TBS: {:?}", hashed_tbs);
     let mut hashed_bytes: Vec<AssignedValue<Fr>> = hashed_tbs.iter().map(|limb| ctx.load_witness(Fr::from(*limb as u64))).collect_vec();
     hashed_bytes.reverse();
     let bytes_bits = hashed_bytes.len() * 8;
