@@ -47,6 +47,7 @@ impl X509VerifierAggregationCircuit {
             snarks[0].instances[i].iter().zip(snarks[1].instances[i].iter()).map(|(x, y)| {
                 let x = aggregation_circuit.builder.pool(0).threads[0].load_witness(*x);
                 let y = aggregation_circuit.builder.pool(0).threads[0].load_witness(*y);
+                println!("x: {:?}, y: {:?}", x, y);
                 aggregation_circuit.builder.pool(0).threads[0].constrain_equal(&x, &y);
             }).collect_vec();
         }
@@ -54,6 +55,7 @@ impl X509VerifierAggregationCircuit {
             snarks[2].instances[i].iter().zip(snarks[3].instances[i].iter()).map(|(x, y)| {
                 let x = aggregation_circuit.builder.pool(0).threads[0].load_witness(*x);
                 let y = aggregation_circuit.builder.pool(0).threads[0].load_witness(*y);
+                println!("x: {:?}, y: {:?}", x, y);
                 aggregation_circuit.builder.pool(0).threads[0].constrain_equal(&x, &y);
             }).collect_vec();
         }
