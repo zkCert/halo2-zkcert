@@ -1,9 +1,9 @@
 // Generate Sha256BitCircuit
 use zkevm_hashes::util::eth_types::Field;
-use std::{marker::PhantomData, result};
+use std::marker::PhantomData;
 use zkevm_hashes::sha256::vanilla::{
     columns::Sha256CircuitConfig,
-    util::{get_num_sha2_blocks, get_sha2_capacity},
+    util::get_sha2_capacity,
     witness::AssignedSha256Block,
 };
 use halo2_base::halo2_proofs::{
