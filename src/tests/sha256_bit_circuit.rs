@@ -1,6 +1,6 @@
 // Generate Sha256BitCircuit
 use zkevm_hashes::util::eth_types::Field;
-use std::marker::PhantomData;
+use std::{marker::PhantomData, result};
 use zkevm_hashes::sha256::vanilla::{
     columns::Sha256CircuitConfig,
     util::{get_num_sha2_blocks, get_sha2_capacity},
@@ -37,8 +37,8 @@ pub struct Sha256BitCircuitConfig<F: Field> {
 pub struct Sha256BitCircuit<F: Field> {
     inputs: Vec<Vec<u8>>,
     num_rows: Option<usize>,
-    verify_output: bool,
-    instances: RefCell<Vec<u8>>,
+    witness_gen_only: bool,
+    exposed_instances: RefCell<Vec<Fr>>,
     _marker: PhantomData<F>,
 }
 
@@ -63,7 +63,7 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
         config: Self::Config,
         mut layouter: impl Layouter<F>,
     ) -> Result<(), Error> {
-        layouter.assign_region(
+        let result = layouter.assign_region(
             || "SHA256 Bit Circuit",
             |mut region| {
                 let start = std::time::Instant::now();
@@ -73,30 +73,53 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
                     self.num_rows.map(get_sha2_capacity),
                 );
                 println!("Witness generation time: {:?}", start.elapsed());
-
-                if self.verify_output {
-                    self.verify_output_witness(&blocks);
+                
+                // Find the block where the final output is
+                let mut final_block = blocks[0].clone();
+                if self.witness_gen_only {
+                    self.verify_output(&blocks);
+                    for assigned_blocks in blocks {
+                        let value = **value_to_option(assigned_blocks.is_final().value()).unwrap();
+                        let value = match value {
+                            Assigned::Trivial(v) => v,
+                            Assigned::Zero => F::ZERO,
+                            Assigned::Rational(a, b) => a * b.invert().unwrap(),
+                        };
+                        if value == F::ONE {
+                            final_block = assigned_blocks;
+                            break;
+                        }
+                    }
                 }
                 
                 {
                     println!("Num advice columns: 18"); // fixed at 18
                     println!("Num rows: {:?}", self.num_rows);
-                    println!("Num SHA256 blocks: {:?}", get_num_sha2_blocks(self.inputs.len()));
                 }
-                
-                Ok(())
+
+                Ok(final_block)
             },
-        )
+        )?;
+
+        println!("is final{:?}", result.is_final());
+        println!("word val{:?}", result.word_values());
+        println!("output {:?}", result.output());
+        println!("len {:?}", result.length());
+
+        // Expose public
+        self.expose_public(&config.instance, layouter.namespace(|| "expose"), result);
+
+        Ok(())
     }
 }
 
 impl<F: Field> Sha256BitCircuit<F> {
     /// Creates a new circuit instance
-    pub fn new(num_rows: Option<usize>, inputs: Vec<Vec<u8>>, verify_output: bool) -> Self {
-        Sha256BitCircuit { num_rows, inputs, verify_output, instances: vec![].into(), _marker: PhantomData }
+    pub fn new(num_rows: Option<usize>, inputs: Vec<Vec<u8>>, witness_gen_only: bool) -> Self {
+        Sha256BitCircuit { num_rows, inputs, witness_gen_only, exposed_instances: vec![].into(), _marker: PhantomData }
     }
 
-    fn verify_output_witness(&self, assigned_blocks: &[AssignedSha256Block<F>]) -> Vec<u8> {
+    fn verify_output(&self, assigned_blocks: &[AssignedSha256Block<F>]) {
         let mut input_offset = 0;
         let mut input = vec![];
         let extract_value = |a: Halo2AssignedCell<F>| {
@@ -111,8 +134,7 @@ impl<F: Field> Sha256BitCircuit<F> {
                 Assigned::Rational(a, b) => a * b.invert().unwrap(),
             }
         };
-        let mut final_output = vec![];
-        for input_block in assigned_blocks {
+        for (i, input_block) in assigned_blocks.iter().enumerate() {
             let is_final = input_block.is_final().clone();
             let output = input_block.output().clone();
             let word_values = input_block.word_values().clone();
@@ -148,24 +170,54 @@ impl<F: Field> Sha256BitCircuit<F> {
                 assert_eq!(output, a, "Outputs do not match");
 
                 input_offset += 1;
-                final_output.push(output);
+                println!("outputoutput: {:?}", output);
+                println!("outputoutput: {:?}", i);
             }
         }
-        // Populate instances
-        self.instances.borrow_mut().extend(final_output[0].clone());
+    }
 
-        println!("Final output of sha256 hash: {:?}", final_output[0]);
+    fn expose_public(
+        &self,
+        instance_columns: &[Column<Instance>],
+        mut layouter: impl Layouter<F>,
+        result: AssignedSha256Block<F>,
+    ) {
+        // expose public instances
+        let output_lo = result.output().lo();
+        let output_hi = result.output().hi();
+        layouter.constrain_instance(output_lo.cell(), instance_columns[0], 0);
+        layouter.constrain_instance(output_hi.cell(), instance_columns[0], 1);
         
-        final_output[0].clone()
+        let output_lo = self.extract_value(output_lo);
+        let output_hi = self.extract_value(output_hi);
+        println!("output_lo: {:?}", output_lo);
+        println!("output_hi: {:?}", output_hi);
+        self.exposed_instances.borrow_mut().extend(output_lo.to_repr().iter().map(|x| Fr::from(*x as u64)).collect_vec());
+        self.exposed_instances.borrow_mut().extend(output_hi.to_repr().iter().map(|x| Fr::from(*x as u64)).collect_vec());            
+
+        println!("exposed_instances: {:?}", self.exposed_instances.borrow());
+    }
+
+    fn extract_value(&self, a: Halo2AssignedCell<F>) -> F {
+        let value = *value_to_option(a.value()).unwrap_or(&&Assigned::Zero);
+        #[cfg(feature = "halo2-axiom")]
+        let value = *value;
+        #[cfg(not(feature = "halo2-axiom"))]
+        let value = value.clone();
+        match value {
+            Assigned::Trivial(v) => v,
+            Assigned::Zero => F::ZERO,
+            Assigned::Rational(a, b) => a * b.invert().unwrap(),
+        }
     }
 }
 
 impl CircuitExt<Fr> for Sha256BitCircuit<Fr> {
     fn num_instance(&self) -> Vec<usize> {
-        vec![self.instances.borrow().len()]
+        vec![self.exposed_instances.borrow().len()]
     }
 
     fn instances(&self) -> Vec<Vec<Fr>> {
-        vec![self.instances.borrow().iter().map(|x| Fr::from(*x as u64)).collect_vec()]
+        vec![self.exposed_instances.borrow().iter().map(|x| *x).collect_vec()]
     }
 }
