@@ -30,7 +30,7 @@ use itertools::Itertools;
 pub struct Sha256BitCircuitConfig<F: Field> {
     sha256_circuit_config: Sha256CircuitConfig<F>,
     #[allow(dead_code)]
-    instance: Vec<Column<Instance>>,
+    instance: Column<Instance>,
 }
 
 #[derive(Default)]
@@ -55,7 +55,7 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
         let sha256_circuit_config = Sha256CircuitConfig::new(meta);
         let instance = meta.instance_column();
         meta.enable_equality(instance);
-        Self::Config { sha256_circuit_config, instance: vec![instance] }
+        Self::Config { sha256_circuit_config, instance }
     }
 
     fn synthesize(
@@ -107,7 +107,7 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
         println!("len {:?}", result.length());
 
         // Expose public
-        self.expose_public(&config.instance, layouter.namespace(|| "expose"), result);
+        self.expose_public(config.instance, layouter.namespace(|| "expose"), result);
 
         Ok(())
     }
@@ -178,20 +178,19 @@ impl<F: Field> Sha256BitCircuit<F> {
 
     fn expose_public(
         &self,
-        instance_columns: &[Column<Instance>],
+        instance_column: Column<Instance>,
         mut layouter: impl Layouter<F>,
         result: AssignedSha256Block<F>,
     ) {
         // expose public instances
         let output_lo = result.output().lo();
         let output_hi = result.output().hi();
-        layouter.constrain_instance(output_lo.cell(), instance_columns[0], 0);
-        layouter.constrain_instance(output_hi.cell(), instance_columns[0], 1);
+        layouter.constrain_instance(output_lo.cell(), instance_column, 0);
+        layouter.constrain_instance(output_hi.cell(), instance_column, 1);
         
+        // TODO: how do you expose public instances?
         let output_lo = self.extract_value(output_lo);
         let output_hi = self.extract_value(output_hi);
-        println!("output_lo: {:?}", output_lo);
-        println!("output_hi: {:?}", output_hi);
         self.exposed_instances.borrow_mut().extend(output_lo.to_repr().iter().map(|x| Fr::from(*x as u64)).collect_vec());
         self.exposed_instances.borrow_mut().extend(output_hi.to_repr().iter().map(|x| Fr::from(*x as u64)).collect_vec());            
 
