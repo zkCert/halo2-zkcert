@@ -113,8 +113,11 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
         )?;
 
         // TODO: How do you expose these instances publicly?
-        let assigned_instances = &mut self.builder.borrow_mut().assigned_instances;
-        assigned_instances[0].extend(result);
+        let builder = &mut self.builder.borrow_mut();
+        builder.assigned_instances[0].extend(result);
+        
+        // TODO: this makes the proof fail
+        // builder.assign_instances(&[config.instance], layouter);
 
         Ok(())
     }
