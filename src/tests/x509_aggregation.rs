@@ -168,7 +168,7 @@ fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_ce
     // println!("Generating proving key");
     let dummy_circuit = Sha256BitCircuit::new(
         CircuitBuilderStage::Keygen,
-        BaseCircuitParams {k, lookup_bits: Some(0), ..Default::default()},
+        BaseCircuitParams {k, lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
         Some(2usize.pow(k as u32) - 109),
         vec![],
         false
@@ -179,7 +179,7 @@ fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_ce
     println!("Generating proof");
     let sha256_bit_circuit = Sha256BitCircuit::new(
         CircuitBuilderStage::Prover,
-        BaseCircuitParams {k, lookup_bits: Some(0), ..Default::default()},
+        BaseCircuitParams {k, lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
         Some(2usize.pow(k as u32) - 109),
         vec![tbs.to_vec()],
         true

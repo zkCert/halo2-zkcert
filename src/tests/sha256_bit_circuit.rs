@@ -1,6 +1,5 @@
 use halo2_base::gates::circuit::BaseCircuitParams;
 use halo2_base::gates::circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage};
-use halo2_base::virtual_region::manager::VirtualRegionManager;
 // Generate Sha256BitCircuit
 use zkevm_hashes::util::eth_types::Field;
 use std::marker::PhantomData;
@@ -113,12 +112,9 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
             },
         )?;
 
-        println!("result {:?}", result);
-
-        // Expose public
+        // TODO: How do you expose these instances publicly?
         let assigned_instances = &mut self.builder.borrow_mut().assigned_instances;
         assigned_instances[0].extend(result);
-        println!("assigned_instances123: {:?}", assigned_instances[0]);
 
         Ok(())
     }
@@ -137,7 +133,7 @@ impl<F: Field> Sha256BitCircuit<F> {
         let mut builder = BaseCircuitBuilder::from_stage(stage).use_params(config_params);
         builder.set_instance_columns(1);
 
-        Sha256BitCircuit { num_rows, inputs, witness_gen_only, builder: builder.into(), _marker: PhantomData }
+        Sha256BitCircuit { num_rows, inputs, witness_gen_only, builder: RefCell::new(builder), _marker: PhantomData }
     }
 
     fn verify_output(&self, assigned_blocks: &[AssignedSha256Block<F>]) {
