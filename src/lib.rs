@@ -38,29 +38,23 @@ impl X509VerifierAggregationCircuit {
             universality,
         );
 
-        println!("instances: {:?}", snarks[0].instances);
-        println!("instances: {:?}", snarks[1].instances);
-        println!("instances: {:?}", snarks[2].instances);
-        println!("instances: {:?}", snarks[3].instances);
-
+        // TODO: SHA256 snarks don't expose instances so this custom aggregation circuit doesn't work. Need to debug
         println!("prev instances: {:?}", aggregation_circuit.previous_instances());
 
-        for i in 0..snarks[0].instances.len() {
-            snarks[0].instances[i].iter().zip(snarks[1].instances[i].iter()).map(|(x, y)| {
-                let x = aggregation_circuit.builder.pool(0).threads[0].load_witness(*x);
-                let y = aggregation_circuit.builder.pool(0).threads[0].load_witness(*y);
-                println!("x: {:?}, y: {:?}", x, y);
-                aggregation_circuit.builder.pool(0).threads[0].constrain_equal(&x, &y);
-            }).collect_vec();
-        }
-        for i in 0..snarks[2].instances.len() {
-            snarks[2].instances[i].iter().zip(snarks[3].instances[i].iter()).map(|(x, y)| {
-                let x = aggregation_circuit.builder.pool(0).threads[0].load_witness(*x);
-                let y = aggregation_circuit.builder.pool(0).threads[0].load_witness(*y);
-                println!("x: {:?}, y: {:?}", x, y);
-                aggregation_circuit.builder.pool(0).threads[0].constrain_equal(&x, &y);
-            }).collect_vec();
-        }
+        // for i in 0..snarks[0].instances.len() {
+        //     snarks[0].instances[i].iter().zip(snarks[1].instances[i].iter()).map(|(x, y)| {
+        //         let x = aggregation_circuit.builder.pool(0).threads[0].load_witness(*x);
+        //         let y = aggregation_circuit.builder.pool(0).threads[0].load_witness(*y);
+        //         aggregation_circuit.builder.pool(0).threads[0].constrain_equal(&x, &y);
+        //     }).collect_vec();
+        // }
+        // for i in 0..snarks[2].instances.len() {
+        //     snarks[2].instances[i].iter().zip(snarks[3].instances[i].iter()).map(|(x, y)| {
+        //         let x = aggregation_circuit.builder.pool(0).threads[0].load_witness(*x);
+        //         let y = aggregation_circuit.builder.pool(0).threads[0].load_witness(*y);
+        //         aggregation_circuit.builder.pool(0).threads[0].constrain_equal(&x, &y);
+        //     }).collect_vec();
+        // }
 
         Self {
             aggregation_circuit
