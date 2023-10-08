@@ -10,7 +10,7 @@ use snark_verifier_sdk::{
     halo2::aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit},
     Snark,
 };
-use itertools::Itertools;
+// use itertools::Itertools;
 
 #[cfg(test)]
 mod tests;
@@ -30,7 +30,7 @@ impl X509VerifierAggregationCircuit {
     ) -> Self {
         // NOTE: only accept 4 snarks into this aggregation circuit
         assert_eq!(snarks.len(), 4);
-        let mut aggregation_circuit = AggregationCircuit::new::<SHPLONK>(
+        let aggregation_circuit = AggregationCircuit::new::<SHPLONK>(
             stage,
             config_params,
             params,
