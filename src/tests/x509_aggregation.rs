@@ -6,7 +6,7 @@ use halo2_base::{
     AssignedValue,
     halo2_proofs::halo2curves::bn256::Fr,
     gates::{
-        circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
+        circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage, BaseCircuitParams},
         GateInstructions
     },
     QuantumCell::{Existing, Constant},
@@ -166,12 +166,25 @@ fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_ce
     let params = gen_srs(k as u32);
     
     // println!("Generating proving key");
-    let dummy_circuit = Sha256BitCircuit::new(Some(2usize.pow(k as u32) - 109), vec![], false);
+    let dummy_circuit = Sha256BitCircuit::new(
+        CircuitBuilderStage::Keygen,
+        BaseCircuitParams {k, lookup_bits: Some(0), ..Default::default()},
+        Some(2usize.pow(k as u32) - 109),
+        vec![],
+        false
+    );
     let pk = gen_pk(&params, &dummy_circuit, None);
     
     // Generate proof
     println!("Generating proof");
-    let sha256_bit_circuit = Sha256BitCircuit::new(Some(2usize.pow(k as u32) - 109), vec![tbs.to_vec()], true);
+    let sha256_bit_circuit = Sha256BitCircuit::new(
+        CircuitBuilderStage::Prover,
+        BaseCircuitParams {k, lookup_bits: Some(0), ..Default::default()},
+        Some(2usize.pow(k as u32) - 109),
+        vec![tbs.to_vec()],
+        true
+    );
+    println!("Circuit instances: {:?}", sha256_bit_circuit.instances());
     gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
 }
 

@@ -38,6 +38,11 @@ impl X509VerifierAggregationCircuit {
             universality,
         );
 
+        println!("instances: {:?}", snarks[0].instances);
+        println!("instances: {:?}", snarks[1].instances);
+        println!("instances: {:?}", snarks[2].instances);
+        println!("instances: {:?}", snarks[3].instances);
+
         println!("prev instances: {:?}", aggregation_circuit.previous_instances());
 
         for i in 0..snarks[0].instances.len() {
