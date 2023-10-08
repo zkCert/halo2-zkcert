@@ -196,12 +196,13 @@ impl<F: Field> Sha256BitCircuit<F> {
 
 impl CircuitExt<Fr> for Sha256BitCircuit<Fr> {
     fn num_instance(&self) -> Vec<usize> {
-        println!("length: {:?}", self.builder.borrow().assigned_instances.iter().map(|instances| instances.len()).collect_vec());
+        let a = &mut self.builder.borrow_mut().assigned_instances;
+        println!("length: {:?}", a);
         self.builder.borrow().assigned_instances.iter().map(|instances| instances.len()).collect()
     }
 
     fn instances(&self) -> Vec<Vec<Fr>> {
-        println!("assigned_instances23: {:?}", self.builder.borrow().assigned_instances);
+        println!("assigned_instances23: {:?}", self.builder.borrow_mut().assigned_instances);
         self.builder.borrow().assigned_instances.iter().map(|x| {
             x.iter().map(|y| *y.value()).collect_vec()
         }).collect_vec()
