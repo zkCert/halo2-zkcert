@@ -190,8 +190,8 @@ enum Commands {
     }
 }
 
-#[tokio::main]
-async fn main() {
+// #[tokio::main]
+fn main() {
     let cli = Cli::parse();
     match cli.command {
         Commands::GenParams { k, params_path } => {
@@ -362,8 +362,6 @@ async fn main() {
                 read_snark(Path::new(&rsa_2_proof_path)).unwrap(),
                 read_snark(Path::new(&unoptimized_sha256_2_proof_path)).unwrap(),
             ];
-
-            println!("snarks: {:?}", snarks);
 
             let mut agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Keygen,
