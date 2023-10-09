@@ -1,11 +1,19 @@
 use halo2_base::{
-    gates::circuit::CircuitBuilderStage,
+    gates::{
+        circuit::{
+            builder::BaseCircuitBuilder, BaseConfig, CircuitBuilderStage,
+        },
+        flex_gate::MultiPhaseThreadBreakPoints,
+    },
     halo2_proofs::{
-        halo2curves::bn256::Bn256,
+        circuit::{Layouter, SimpleFloorPlanner},
+        halo2curves::bn256::{Bn256, Fr},
+        plonk::{self, Circuit, ConstraintSystem, Selector},
         poly::kzg::commitment::ParamsKZG,
     },
 };
 use snark_verifier_sdk::{
+    CircuitExt,
     SHPLONK,
     halo2::aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit},
     Snark,
@@ -57,5 +65,66 @@ impl X509VerifierAggregationCircuit {
         Self {
             aggregation_circuit
         }
+    }
+
+    /// Auto-configure the circuit and change the circuit's internal configuration parameters.
+    pub fn calculate_params(&mut self, minimum_rows: Option<usize>) -> AggregationConfigParams {
+        self.aggregation_circuit.calculate_params(minimum_rows).try_into().unwrap()
+    }
+
+    /// The break points of the circuit.
+    pub fn break_points(&self) -> MultiPhaseThreadBreakPoints {
+        self.aggregation_circuit.break_points()
+    }
+}
+
+impl Circuit<Fr> for X509VerifierAggregationCircuit {
+    type Config = BaseConfig<Fr>;
+    type FloorPlanner = SimpleFloorPlanner;
+    type Params = AggregationConfigParams;
+
+    fn params(&self) -> Self::Params {
+        (&self.aggregation_circuit.builder.config_params).try_into().unwrap()
+    }
+
+    fn without_witnesses(&self) -> Self {
+        unimplemented!()
+    }
+
+    fn configure_with_params(
+        meta: &mut ConstraintSystem<Fr>,
+        params: Self::Params,
+    ) -> Self::Config {
+        BaseCircuitBuilder::configure_with_params(meta, params.into())
+    }
+
+    fn configure(_: &mut ConstraintSystem<Fr>) -> Self::Config {
+        unreachable!()
+    }
+
+    fn synthesize(
+        &self,
+        config: Self::Config,
+        layouter: impl Layouter<Fr>,
+    ) -> Result<(), plonk::Error> {
+        self.aggregation_circuit.synthesize(config, layouter)
+    }
+}
+
+impl CircuitExt<Fr> for X509VerifierAggregationCircuit {
+    fn num_instance(&self) -> Vec<usize> {
+        self.aggregation_circuit.num_instance()
+    }
+
+    fn instances(&self) -> Vec<Vec<Fr>> {
+        self.aggregation_circuit.instances()
+    }
+
+    fn accumulator_indices() -> Option<Vec<(usize, usize)>> {
+        AggregationCircuit::accumulator_indices()
+    }
+
+    fn selectors(config: &Self::Config) -> Vec<Selector> {
+        AggregationCircuit::selectors(config)
     }
 }

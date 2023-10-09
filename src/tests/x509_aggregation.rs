@@ -144,50 +144,50 @@ fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path:
     gen_snark_shplonk(&params, &pk, builder, None::<&str>)
 }
 
-fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
-    // Read the PEM certificate from a file
-    let mut cert_file = File::open(verify_cert_path).expect("Failed to open PEM file");
-    let mut cert_pem_buffer = Vec::new();
-    cert_file.read_to_end(&mut cert_pem_buffer).expect("Failed to read PEM file");
+// fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
+//     // Read the PEM certificate from a file
+//     let mut cert_file = File::open(verify_cert_path).expect("Failed to open PEM file");
+//     let mut cert_pem_buffer = Vec::new();
+//     cert_file.read_to_end(&mut cert_pem_buffer).expect("Failed to read PEM file");
 
-    // Parse the PEM certificate using x509-parser
-    let cert_pem = parse_x509_pem(&cert_pem_buffer).expect("Failed to parse cert 3 PEM").1;
-    let cert = cert_pem.parse_x509().expect("Failed to parse PEM certificate");
+//     // Parse the PEM certificate using x509-parser
+//     let cert_pem = parse_x509_pem(&cert_pem_buffer).expect("Failed to parse cert 3 PEM").1;
+//     let cert = cert_pem.parse_x509().expect("Failed to parse PEM certificate");
 
-    // Extract the TBS (To-Be-Signed) data from the certificate 3
-    let tbs = cert.tbs_certificate.as_ref();
-    println!("TBS (To-Be-Signed) Length: {:x?}", tbs.len().to_string());
+//     // Extract the TBS (To-Be-Signed) data from the certificate 3
+//     let tbs = cert.tbs_certificate.as_ref();
+//     println!("TBS (To-Be-Signed) Length: {:x?}", tbs.len().to_string());
 
-    let mut issuer_cert_file = File::open(issuer_cert_path).expect("Failed to open cert 2PEM file");
-    let mut issuer_cert_pem_buffer = Vec::new();
-    issuer_cert_file.read_to_end(&mut issuer_cert_pem_buffer).expect("Failed to read cert 2 PEM file");
+//     let mut issuer_cert_file = File::open(issuer_cert_path).expect("Failed to open cert 2PEM file");
+//     let mut issuer_cert_pem_buffer = Vec::new();
+//     issuer_cert_file.read_to_end(&mut issuer_cert_pem_buffer).expect("Failed to read cert 2 PEM file");
 
-    // Generate params
-    println!("Generate params");
-    let params = gen_srs(k as u32);
+//     // Generate params
+//     println!("Generate params");
+//     let params = gen_srs(k as u32);
     
-    // println!("Generating proving key");
-    let dummy_circuit = Sha256BitCircuit::new(
-        CircuitBuilderStage::Keygen,
-        BaseCircuitParams {k, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
-        Some(2usize.pow(k as u32) - 109),
-        vec![tbs.to_vec()],
-        false
-    );
-    let pk = gen_pk(&params, &dummy_circuit, None);
+//     // println!("Generating proving key");
+//     let dummy_circuit = Sha256BitCircuit::new(
+//         CircuitBuilderStage::Keygen,
+//         BaseCircuitParams {k, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
+//         Some(2usize.pow(k as u32) - 109),
+//         vec![tbs.to_vec()],
+//         false
+//     );
+//     let pk = gen_pk(&params, &dummy_circuit, None);
     
-    // Generate proof
-    println!("Generating proof");
-    let sha256_bit_circuit = Sha256BitCircuit::new(
-        CircuitBuilderStage::Prover,
-        BaseCircuitParams {k, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
-        Some(2usize.pow(k as u32) - 109),
-        vec![tbs.to_vec()],
-        true
-    );
-    println!("Circuit instances: {:?}", sha256_bit_circuit.instances());
-    gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
-}
+//     // Generate proof
+//     println!("Generating proof");
+//     let sha256_bit_circuit = Sha256BitCircuit::new(
+//         CircuitBuilderStage::Prover,
+//         BaseCircuitParams {k, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
+//         Some(2usize.pow(k as u32) - 109),
+//         vec![tbs.to_vec()],
+//         true
+//     );
+//     println!("Circuit instances: {:?}", sha256_bit_circuit.instances());
+//     gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
+// }
 
 fn generate_unoptimized_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
     // Read the PEM certificate from a file
@@ -242,7 +242,6 @@ fn generate_unoptimized_sha256_circuit_with_instances(verify_cert_path: &str, is
     gen_snark_shplonk(&params, &pk, builder, None::<&str>)
 }
 
-// TODO: Test doesnt work
 #[test]
 fn test_x509_verifier_aggregation_circuit_evm_verification1() {
     println!("Generating dummy snark");
@@ -277,7 +276,7 @@ fn test_x509_verifier_aggregation_circuit_evm_verification1() {
         &agg_params,
         vec![snark1.clone(), snark2.clone(), snark3.clone(), snark4.clone()],
         VerifierUniversality::Full
-    ).aggregation_circuit;
+    );
 
     println!("Aggregation circuit calculating params");
     let agg_config = agg_circuit.calculate_params(Some(10));
