@@ -383,8 +383,12 @@ async fn main() {
                 VerifierUniversality::Full,
             ).use_break_points(break_points.clone());
 
-            let pk = read_pk::<AggregationCircuit>(Path::new(&pk_path), agg_circuit.params()).unwrap();
-            gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), Some(Path::new(&agg_proof_path)));
+            println!("Generating aggregation snark");
+            println!("Aggregation circuit params: {:?}", agg_circuit.params());
+            println!("Break points: {:?}", break_points);
+
+            // let pk = read_pk::<AggregationCircuit>(Path::new(&pk_path), agg_circuit.params()).unwrap();
+            // gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), Some(Path::new(&agg_proof_path)));
         },
         Commands::GenX509AggEVMProof {
             agg_k,
