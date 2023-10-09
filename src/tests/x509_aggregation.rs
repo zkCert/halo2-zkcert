@@ -189,7 +189,7 @@ fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_ce
     gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
 }
 
-fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
+fn generate_unoptimized_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
     // Read the PEM certificate from a file
     let mut cert_file = File::open(verify_cert_path).expect("Failed to open PEM file");
     let mut cert_pem_buffer = Vec::new();
@@ -246,7 +246,7 @@ fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_pa
 #[test]
 fn test_x509_verifier_aggregation_circuit_evm_verification1() {
     println!("Generating dummy snark");
-    let snark1 = generate_sha256_circuit_with_instances(
+    let snark1 = generate_unoptimized_sha256_circuit_with_instances(
         "./certs/cert_3.pem",
         "./certs/cert_2.pem",
         16
@@ -256,7 +256,7 @@ fn test_x509_verifier_aggregation_circuit_evm_verification1() {
         "./certs/cert_2.pem",
         17
     );
-    let snark3 = generate_sha256_circuit_with_instances(
+    let snark3 = generate_unoptimized_sha256_circuit_with_instances(
         "./certs/cert_2.pem",
         "./certs/cert_1.pem",
         16
@@ -268,7 +268,7 @@ fn test_x509_verifier_aggregation_circuit_evm_verification1() {
     );
 
     // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
-    let agg_k = 23;
+    let agg_k = 20;
     let agg_lookup_bits = agg_k - 1;
     let agg_params = gen_srs(agg_k as u32);
     let mut agg_circuit = X509VerifierAggregationCircuit::new(
