@@ -54,7 +54,7 @@ enum Commands {
     /// Generate proving keys for unoptimized SHA256 circuit
     GenUnoptimizedSha256Keys {
         /// k parameter for circuit.
-        #[arg(long, default_value = "17")]
+        #[arg(long, default_value = "19")]
         k: u32,
         /// setup parameters path
         #[arg(short, long, default_value = "./params")]
@@ -99,7 +99,7 @@ enum Commands {
     },
     ProveUnoptimizedSha256 {
         /// k parameter for circuit.
-        #[arg(long, default_value = "17")]
+        #[arg(long, default_value = "19")]
         k: u32,
         /// setup parameters path
         #[arg(short, long, default_value = "./params")]
