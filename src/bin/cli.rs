@@ -377,8 +377,8 @@ async fn main() {
             println!("Aggregation config params: {:?}", agg_config);
             println!("Aggregation circuit params: {:?}", agg_circuit.params());
             // Reads pk
-            let pk = gen_pk(&agg_params, &agg_circuit, None);
-            let break_points = agg_circuit.break_points();
+            // let pk = gen_pk(&agg_params, &agg_circuit, None);
+            let break_points = &agg_circuit.break_points();
             
             let agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Prover,
@@ -388,7 +388,7 @@ async fn main() {
                 VerifierUniversality::Full,
             ).use_break_points(break_points.clone());
 
-            // let pk = read_pk::<AggregationCircuit>(Path::new(&pk_path), agg_circuit.params()).unwrap();
+            let pk = read_pk::<AggregationCircuit>(Path::new(&pk_path), agg_circuit.params()).unwrap();
             gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), Some(Path::new(&agg_proof_path)));
         },
         Commands::GenX509AggEVMProof {
