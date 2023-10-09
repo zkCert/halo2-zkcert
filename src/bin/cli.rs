@@ -373,7 +373,7 @@ async fn main() {
 
             let agg_config = agg_circuit.calculate_params(Some(10));
 
-            let break_points = agg_circuit.break_points();
+            let break_points = agg_circuit.aggregation_circuit.break_points();
             
             println!("Generating aggregation snark");
             println!("Aggregation circuit params: {:?}", agg_circuit.params());
