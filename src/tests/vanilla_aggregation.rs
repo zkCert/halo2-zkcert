@@ -16,7 +16,7 @@ use snark_verifier_sdk::{
     halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk},
     Snark, CircuitExt,
 };
-use super::sha256_bit_circuit::Sha256BitCircuit;
+use crate::sha256_bit_circuit::Sha256BitCircuit;
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Read;
