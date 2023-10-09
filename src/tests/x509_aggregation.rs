@@ -293,7 +293,7 @@ fn test_x509_verifier_aggregation_circuit_evm_verification1() {
         &agg_params,
         vec![snark1, snark2, snark3, snark4],
         VerifierUniversality::Full,
-    ).aggregation_circuit.use_break_points(break_points.clone());
+    ).use_break_points(break_points.clone());
 
     println!("Generating aggregation snark");
     let _agg_snark = gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), None::<&str>);

@@ -76,6 +76,17 @@ impl X509VerifierAggregationCircuit {
     pub fn break_points(&self) -> MultiPhaseThreadBreakPoints {
         self.aggregation_circuit.break_points()
     }
+
+    /// Sets the break points of the circuit.
+    pub fn set_break_points(&mut self, break_points: MultiPhaseThreadBreakPoints) {
+        self.aggregation_circuit.set_break_points(break_points);
+    }
+
+    /// Returns new with break points
+    pub fn use_break_points(mut self, break_points: MultiPhaseThreadBreakPoints) -> Self {
+        self.set_break_points(break_points);
+        self
+    }
 }
 
 impl Circuit<Fr> for X509VerifierAggregationCircuit {
