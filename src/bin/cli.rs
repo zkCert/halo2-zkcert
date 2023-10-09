@@ -363,6 +363,8 @@ async fn main() {
                 read_snark(Path::new(&unoptimized_sha256_2_proof_path)).unwrap(),
             ];
 
+            println!("snarks: {:?}", snarks);
+
             let mut agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Keygen,
                 AggregationConfigParams {degree: agg_k, lookup_bits: agg_lookup_bits as usize, ..Default::default()},
