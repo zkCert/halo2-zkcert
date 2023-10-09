@@ -20,7 +20,6 @@ use snark_verifier_sdk::{
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
-use serde_json;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -195,6 +194,8 @@ enum Commands {
         /// proving key path
         #[arg(long, default_value = "./build/x509_agg.pk")]
         pk_path: String,
+        #[arg(long, default_value = "./build/x509_break_points.json")]
+        break_points_path: String,
     }
 }
 
@@ -388,20 +389,12 @@ async fn main() {
 
             let agg_config = agg_circuit.calculate_params(Some(10));
 
-            println!("Generating aggregation snark");
-            println!("Aggregation config params: {:?}", agg_config);
-            println!("Aggregation circuit params: {:?}", agg_circuit.params());
-            // Reads pk
-            // let pk = gen_pk(&agg_params, &agg_circuit, None);
-
-            // Load break points
+            // Load break point from file
             let mut file = File::open(break_points_path).unwrap();
             let mut contents = String::new();
             file.read_to_string(&mut contents).unwrap();
             let break_points: MultiPhaseThreadBreakPoints = serde_json::from_str(&contents).unwrap();
 
-            // let break_points = agg_circuit.break_points();
-            
             let agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Prover,
                 agg_config,
@@ -421,6 +414,7 @@ async fn main() {
             rsa_2_proof_path,
             unoptimized_sha256_2_proof_path,
             pk_path,
+            break_points_path,
         } => {
             env::set_var("PARAMS_DIR", params_path);
             let agg_lookup_bits = agg_k - 1;
@@ -443,7 +437,11 @@ async fn main() {
 
             let agg_config = agg_circuit.calculate_params(Some(10));
 
-            let break_points = agg_circuit.break_points();
+            // Load break point from file
+            let mut file = File::open(break_points_path).unwrap();
+            let mut contents = String::new();
+            file.read_to_string(&mut contents).unwrap();
+            let break_points: MultiPhaseThreadBreakPoints = serde_json::from_str(&contents).unwrap();
 
             let agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Prover,
