@@ -374,7 +374,10 @@ async fn main() {
             let agg_config = agg_circuit.calculate_params(Some(10));
 
             let break_points = agg_circuit.break_points();
-
+            
+            println!("Generating aggregation snark");
+            println!("Aggregation circuit params: {:?}", agg_circuit.params());
+            println!("Break points: {:?}", break_points);
             let agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Prover,
                 agg_config,
@@ -383,9 +386,6 @@ async fn main() {
                 VerifierUniversality::Full,
             ).use_break_points(break_points.clone());
 
-            println!("Generating aggregation snark");
-            println!("Aggregation circuit params: {:?}", agg_circuit.params());
-            println!("Break points: {:?}", break_points);
 
             // let pk = read_pk::<AggregationCircuit>(Path::new(&pk_path), agg_circuit.params()).unwrap();
             // gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), Some(Path::new(&agg_proof_path)));
