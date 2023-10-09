@@ -119,7 +119,7 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
         println!("assigned_instances: {:?}", builder.assigned_instances);
         
         // TODO: this makes the proof fail
-        builder.assign_instances(&[config.instance], layouter);
+        // builder.assign_instances(&[config.instance], layouter);
 
         Ok(())
     }

@@ -22,6 +22,8 @@ use itertools::Itertools;
 
 #[cfg(test)]
 mod tests;
+pub mod helpers;
+pub mod sha256_bit_circuit;
 
 #[derive(Clone, Debug)]
 pub struct X509VerifierAggregationCircuit {
@@ -54,12 +56,12 @@ impl X509VerifierAggregationCircuit {
         
         snark_0_instances.iter().zip(snark_1_instances.iter()).map(|(x, y)| {
             println!("x: {:?}, y: {:?}", x, y);
-            aggregation_circuit.builder.pool(0).threads[0].constrain_equal(&x, &y);
+            aggregation_circuit.builder.pool(0).threads[0].constrain_equal(x, y);
         }).collect_vec();
 
         snark_2_instances.iter().zip(snark_3_instances.iter()).map(|(x, y)| {
             println!("x: {:?}, y: {:?}", x, y);
-            aggregation_circuit.builder.pool(0).threads[0].constrain_equal(&x, &y);
+            aggregation_circuit.builder.pool(0).threads[0].constrain_equal(x, y);
         }).collect_vec();
 
         Self {
@@ -69,7 +71,7 @@ impl X509VerifierAggregationCircuit {
 
     /// Auto-configure the circuit and change the circuit's internal configuration parameters.
     pub fn calculate_params(&mut self, minimum_rows: Option<usize>) -> AggregationConfigParams {
-        self.aggregation_circuit.calculate_params(minimum_rows).try_into().unwrap()
+        self.aggregation_circuit.calculate_params(minimum_rows)
     }
 
     /// The break points of the circuit.
