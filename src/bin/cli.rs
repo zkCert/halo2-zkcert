@@ -373,6 +373,7 @@ async fn main() {
 
             let agg_config = agg_circuit.calculate_params(Some(10));
 
+            let pk = read_pk::<AggregationCircuit>(Path::new(&pk_path), agg_circuit.params()).unwrap();
             println!("Generating aggregation snark");
             println!("Aggregation circuit params: {:?}", agg_circuit.params());
             let break_points = agg_circuit.break_points();
@@ -386,8 +387,7 @@ async fn main() {
             ).use_break_points(break_points.clone());
 
 
-            // let pk = read_pk::<AggregationCircuit>(Path::new(&pk_path), agg_circuit.params()).unwrap();
-            // gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), Some(Path::new(&agg_proof_path)));
+            gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), Some(Path::new(&agg_proof_path)));
         },
         Commands::GenX509AggEVMProof {
             agg_k,
