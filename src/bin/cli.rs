@@ -7,6 +7,7 @@ use halo2_base::{
     halo2_proofs::halo2curves::bn256::Fr,
     halo2_proofs::plonk::Circuit,
     gates::circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage, BaseCircuitParams},
+    gates::flex_gate::MultiPhaseThreadBreakPoints,
     utils::fs::gen_srs
 };
 use snark_verifier_sdk::{
@@ -17,6 +18,9 @@ use snark_verifier_sdk::{
     CircuitExt
 };
 use std::path::Path;
+use std::fs::File;
+use std::io::prelude::*;
+use serde_json;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -146,6 +150,8 @@ enum Commands {
         /// proving key path
         #[arg(long, default_value = "./build/x509_agg.pk")]
         pk_path: String,
+        #[arg(long, default_value = "./build/x509_break_points.json")]
+        break_points_path: String,
     },
     /// Generate proof for x509 aggregation circuit
     GenX509AggProof {
@@ -165,6 +171,8 @@ enum Commands {
         unoptimized_sha256_2_proof_path: String,
         #[arg(long, default_value = "./build/x509_agg.pk")]
         pk_path: String,
+        #[arg(long, default_value = "./build/x509_break_points.json")]
+        break_points_path: String,
         #[arg(long, default_value = "./build/x509_agg.proof")]
         agg_proof_path: String,
     },
@@ -318,6 +326,7 @@ async fn main() {
             rsa_2_proof_path,
             unoptimized_sha256_2_proof_path,
             pk_path,
+            break_points_path,
         } => {
             env::set_var("PARAMS_DIR", params_path);
             let agg_lookup_bits = agg_k - 1;
@@ -341,6 +350,11 @@ async fn main() {
             agg_circuit.calculate_params(Some(10));
 
             gen_pk(&agg_params, &agg_circuit, Some(Path::new(&pk_path)));
+
+            // Store agg circuit breakpoints
+            let json = serde_json::to_string(&agg_circuit.break_points()).unwrap();
+            let mut file = File::create(break_points_path).unwrap();
+            file.write_all(json.as_bytes()).unwrap();
         },
         Commands::GenX509AggProof {
             agg_k,
@@ -350,6 +364,7 @@ async fn main() {
             rsa_2_proof_path,
             unoptimized_sha256_2_proof_path,
             pk_path,
+            break_points_path,
             agg_proof_path,
         } => {
             env::set_var("PARAMS_DIR", params_path);
@@ -378,7 +393,14 @@ async fn main() {
             println!("Aggregation circuit params: {:?}", agg_circuit.params());
             // Reads pk
             // let pk = gen_pk(&agg_params, &agg_circuit, None);
-            let break_points = &agg_circuit.break_points();
+
+            // Load break points
+            let mut file = File::open(break_points_path).unwrap();
+            let mut contents = String::new();
+            file.read_to_string(&mut contents).unwrap();
+            let break_points: MultiPhaseThreadBreakPoints = serde_json::from_str(&contents).unwrap();
+
+            // let break_points = agg_circuit.break_points();
             
             let agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Prover,
