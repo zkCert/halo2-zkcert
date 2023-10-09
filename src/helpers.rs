@@ -157,7 +157,6 @@ pub fn create_default_unoptimized_sha256_circuit_with_instances(
 
     // Insert output hash as public instance for circuit
     builder.assigned_instances[0].extend(result.output_bytes);
-    println!("Output bytes: {:?}", builder.assigned_instances);
 
     let circuit_params = builder.calculate_params(Some(10));
     println!("Circuit params: {:?}", circuit_params);

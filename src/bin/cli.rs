@@ -464,8 +464,11 @@ async fn main() {
             let proof = gen_evm_proof_shplonk(&agg_params, &pk, agg_circuit, instances.clone());
 
             println!("Size of the contract: {} bytes", deployment_code.len());
+            println!("Deploying contract...");
 
             evm_verify(deployment_code, instances, proof);
+
+            println!("Verification success!");
         }
     }
 }
