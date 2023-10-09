@@ -374,6 +374,7 @@ async fn main() {
             let agg_config = agg_circuit.calculate_params(Some(10));
 
             println!("Generating aggregation snark");
+            println!("Aggregation config params: {:?}", agg_config);
             println!("Aggregation circuit params: {:?}", agg_circuit.params());
             // Reads pk
             let pk = gen_pk(&agg_params, &agg_circuit, Some(Path::new(&pk_path)));
