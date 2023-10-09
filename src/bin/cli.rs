@@ -190,8 +190,8 @@ enum Commands {
     }
 }
 
-// #[tokio::main]
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
     match cli.command {
         Commands::GenParams { k, params_path } => {
@@ -378,7 +378,7 @@ fn main() {
             println!("Aggregation circuit params: {:?}", agg_circuit.params());
             // Reads pk
             let pk = gen_pk(&agg_params, &agg_circuit, Some(Path::new(&pk_path)));
-            let break_points = agg_circuit.break_points();
+            let break_points = X509VerifierAggregationCircuit::break_points(&agg_circuit);
             
             let agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Prover,
