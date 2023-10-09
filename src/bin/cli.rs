@@ -377,8 +377,8 @@ async fn main() {
             println!("Aggregation config params: {:?}", agg_config);
             println!("Aggregation circuit params: {:?}", agg_circuit.params());
             // Reads pk
-            let pk = gen_pk(&agg_params, &agg_circuit, Some(Path::new(&pk_path)));
-            let break_points = X509VerifierAggregationCircuit::break_points(&agg_circuit);
+            let pk = gen_pk(&agg_params, &agg_circuit, None);
+            let break_points = agg_circuit.break_points();
             
             let agg_circuit = X509VerifierAggregationCircuit::new(
                 CircuitBuilderStage::Prover,
