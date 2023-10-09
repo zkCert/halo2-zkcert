@@ -376,7 +376,7 @@ async fn main() {
             println!("Generating aggregation snark");
             println!("Aggregation circuit params: {:?}", agg_circuit.params());
             // Reads pk
-            gen_pk(&agg_params, &agg_circuit, Some(Path::new(&pk_path)));
+            let pk = gen_pk(&agg_params, &agg_circuit, Some(Path::new(&pk_path)));
             let break_points = agg_circuit.break_points();
             
             let agg_circuit = X509VerifierAggregationCircuit::new(
