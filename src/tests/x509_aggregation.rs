@@ -15,6 +15,7 @@ use halo2_base::{
 use halo2_rsa::{
     BigUintConfig, BigUintInstructions, RSAInstructions, RSAConfig, RSAPubE, RSAPublicKey, RSASignature,
 };
+use halo2_sha256_unoptimized::Sha256Chip;
 use snark_verifier_sdk::{
     gen_pk,
     halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk},
@@ -168,9 +169,9 @@ fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_ce
     // println!("Generating proving key");
     let dummy_circuit = Sha256BitCircuit::new(
         CircuitBuilderStage::Keygen,
-        BaseCircuitParams {k, lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
+        BaseCircuitParams {k, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
         Some(2usize.pow(k as u32) - 109),
-        vec![],
+        vec![tbs.to_vec()],
         false
     );
     let pk = gen_pk(&params, &dummy_circuit, None);
@@ -179,7 +180,7 @@ fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_ce
     println!("Generating proof");
     let sha256_bit_circuit = Sha256BitCircuit::new(
         CircuitBuilderStage::Prover,
-        BaseCircuitParams {k, lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
+        BaseCircuitParams {k, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
         Some(2usize.pow(k as u32) - 109),
         vec![tbs.to_vec()],
         true
@@ -188,80 +189,133 @@ fn generate_zkevm_sha256_circuit_with_instance(verify_cert_path: &str, issuer_ce
     gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
 }
 
+fn generate_sha256_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
+    // Read the PEM certificate from a file
+    let mut cert_file = File::open(verify_cert_path).expect("Failed to open PEM file");
+    let mut cert_pem_buffer = Vec::new();
+    cert_file.read_to_end(&mut cert_pem_buffer).expect("Failed to read PEM file");
+
+    // Parse the PEM certificate using x509-parser
+    let cert_pem = parse_x509_pem(&cert_pem_buffer).expect("Failed to parse cert 3 PEM").1;
+    let cert = cert_pem.parse_x509().expect("Failed to parse PEM certificate");
+
+    // Extract the TBS (To-Be-Signed) data from the certificate 3
+    let tbs = &cert.tbs_certificate.as_ref();
+    println!("TBS (To-Be-Signed) Length: {:x?}", tbs.len().to_string());
+
+    let mut issuer_cert_file = File::open(issuer_cert_path).expect("Failed to open cert 2PEM file");
+    let mut issuer_cert_pem_buffer = Vec::new();
+    issuer_cert_file.read_to_end(&mut issuer_cert_pem_buffer).expect("Failed to read cert 2 PEM file");
+
+    // Circuit inputs
+    let max_byte_sizes = vec![192]; // Use precomputed SHA
+
+    let mut builder = BaseCircuitBuilder::new(false);
+    // Set rows
+    builder.set_k(k);
+    builder.set_lookup_bits(k - 1);
+    builder.set_instance_columns(1);
+
+    let range = builder.range_chip();
+    let ctx = builder.main(0);
+
+    let mut sha256_chip = Sha256Chip::construct(max_byte_sizes, range.clone(), true);
+    let result = sha256_chip.digest(ctx, &tbs, Some(1088)).unwrap();
+
+    // Insert output hash as public instance for circuit
+    builder.assigned_instances[0].extend(result.output_bytes);
+    println!("Output bytes: {:?}", builder.assigned_instances);
+
+    let circuit_params = builder.calculate_params(Some(10));
+    println!("Circuit params: {:?}", circuit_params);
+    let builder = builder.use_params(circuit_params);
+
+    // Generate params
+    println!("Generate params");
+    let params = gen_srs(k as u32);
+
+    // println!("Generating proving key");
+    let pk = gen_pk(&params, &builder, None);
+
+    // Generate proof
+    println!("Generating proof");
+    gen_snark_shplonk(&params, &pk, builder, None::<&str>)
+}
+
 // TODO: Test doesnt work
-// #[test]
-// fn test_x509_verifier_aggregation_circuit_evm_verification1() {
-//     println!("Generating dummy snark");
-//     let snark1 = generate_zkevm_sha256_circuit_with_instance(
-//         "./certs/cert_3.pem",
-//         "./certs/cert_2.pem",
-//         11
-//     );
-//     let snark2 = generate_rsa_circuit_with_instances(
-//         "./certs/cert_3.pem",
-//         "./certs/cert_2.pem",
-//         17
-//     );
-//     let snark3 = generate_zkevm_sha256_circuit_with_instance(
-//         "./certs/cert_2.pem",
-//         "./certs/cert_1.pem",
-//         11
-//     );
-//     let snark4 = generate_rsa_circuit_with_instances(
-//         "./certs/cert_2.pem",
-//         "./certs/cert_1.pem",
-//         17
-//     );
+#[test]
+fn test_x509_verifier_aggregation_circuit_evm_verification1() {
+    println!("Generating dummy snark");
+    let snark1 = generate_sha256_circuit_with_instances(
+        "./certs/cert_3.pem",
+        "./certs/cert_2.pem",
+        16
+    );
+    let snark2 = generate_rsa_circuit_with_instances(
+        "./certs/cert_3.pem",
+        "./certs/cert_2.pem",
+        17
+    );
+    let snark3 = generate_sha256_circuit_with_instances(
+        "./certs/cert_2.pem",
+        "./certs/cert_1.pem",
+        16
+    );
+    let snark4 = generate_rsa_circuit_with_instances(
+        "./certs/cert_2.pem",
+        "./certs/cert_1.pem",
+        17
+    );
 
-//     // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
-//     let agg_k = 23;
-//     let agg_lookup_bits = agg_k - 1;
-//     let agg_params = gen_srs(agg_k as u32);
-//     let mut agg_circuit = X509VerifierAggregationCircuit::new(
-//         CircuitBuilderStage::Keygen,
-//         AggregationConfigParams {degree: agg_k, lookup_bits: agg_lookup_bits as usize, ..Default::default()},
-//         &agg_params,
-//         vec![snark1.clone(), snark2.clone(), snark3.clone(), snark4.clone()],
-//         VerifierUniversality::Full
-//     ).aggregation_circuit;
+    // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
+    let agg_k = 23;
+    let agg_lookup_bits = agg_k - 1;
+    let agg_params = gen_srs(agg_k as u32);
+    let mut agg_circuit = X509VerifierAggregationCircuit::new(
+        CircuitBuilderStage::Keygen,
+        AggregationConfigParams {degree: agg_k, lookup_bits: agg_lookup_bits as usize, ..Default::default()},
+        &agg_params,
+        vec![snark1.clone(), snark2.clone(), snark3.clone(), snark4.clone()],
+        VerifierUniversality::Full
+    ).aggregation_circuit;
 
-//     println!("Aggregation circuit calculating params");
-//     let agg_config = agg_circuit.calculate_params(Some(10));
+    println!("Aggregation circuit calculating params");
+    let agg_config = agg_circuit.calculate_params(Some(10));
 
-//     // let start0 = start_timer!(|| "gen vk & pk");
-//     println!("Aggregation circuit generating pk");
-//     let pk = gen_pk(&agg_params, &agg_circuit, None);
+    // let start0 = start_timer!(|| "gen vk & pk");
+    println!("Aggregation circuit generating pk");
+    let pk = gen_pk(&agg_params, &agg_circuit, None);
     
-//     let break_points = agg_circuit.break_points();
+    let break_points = agg_circuit.break_points();
 
-//     let agg_circuit = X509VerifierAggregationCircuit::new(
-//         CircuitBuilderStage::Prover,
-//         agg_config,
-//         &agg_params,
-//         vec![snark1, snark2, snark3, snark4],
-//         VerifierUniversality::Full,
-//     ).aggregation_circuit.use_break_points(break_points.clone());
+    let agg_circuit = X509VerifierAggregationCircuit::new(
+        CircuitBuilderStage::Prover,
+        agg_config,
+        &agg_params,
+        vec![snark1, snark2, snark3, snark4],
+        VerifierUniversality::Full,
+    ).aggregation_circuit.use_break_points(break_points.clone());
 
-//     println!("Generating aggregation snark");
-//     let _agg_snark = gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), None::<&str>);
-//     println!("Aggregation snark success");
+    println!("Generating aggregation snark");
+    let _agg_snark = gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), None::<&str>);
+    println!("Aggregation snark success");
 
-//     println!("Generate EVM verifier");
-//     let num_instances = agg_circuit.num_instance();
-//     let instances = agg_circuit.instances();
-//     let deployment_code = gen_evm_verifier_shplonk::<AggregationCircuit>(
-//         &agg_params,
-//         pk.get_vk(),
-//         num_instances,
-//         Some(Path::new("AggregationVerifierFinal.sol")),
-//     );
+    println!("Generate EVM verifier");
+    let num_instances = agg_circuit.num_instance();
+    let instances = agg_circuit.instances();
+    let deployment_code = gen_evm_verifier_shplonk::<AggregationCircuit>(
+        &agg_params,
+        pk.get_vk(),
+        num_instances,
+        Some(Path::new("AggregationVerifierFinal.sol")),
+    );
     
-//     println!("Generating evm aggregation proof");
-//     let proof = gen_evm_proof_shplonk(&agg_params, &pk, agg_circuit, instances.clone());
+    println!("Generating evm aggregation proof");
+    let proof = gen_evm_proof_shplonk(&agg_params, &pk, agg_circuit, instances.clone());
 
-//     println!("Size of the contract: {} bytes", deployment_code.len());
+    println!("Size of the contract: {} bytes", deployment_code.len());
 
-//     println!("Verifying EVM proof");
-//     evm_verify(deployment_code, instances, proof);
+    println!("Verifying EVM proof");
+    evm_verify(deployment_code, instances, proof);
 
-// }
+}
