@@ -26,6 +26,33 @@ use x509_parser::pem::parse_x509_pem;
 use x509_parser::public_key::PublicKey;
 use num_bigint::BigUint;
 use itertools::Itertools;
+use openssl::ssl::{SslConnector, SslMethod};
+use std::net::TcpStream;
+use std::io::Write;
+
+pub fn download_tls_certs_from_domain(
+    domain: &str,
+    certs_path: &str
+) {
+    let port = "443";
+
+    let connector = SslConnector::builder(SslMethod::tls()).unwrap().build();
+
+    let stream = TcpStream::connect(format!("{}:{}", domain, port)).unwrap();
+    let ssl_stream = connector.connect(domain, stream).unwrap();
+
+    // Obtain the certificate chain
+    let cert_chain = ssl_stream.ssl().verified_chain().unwrap();
+
+    // Convert each certificate in the chain to PEM format and save to a file
+    for (i, certificate) in cert_chain.iter().enumerate() {
+        let pem = certificate.to_pem().unwrap();
+        let filename = format!("{}_{}.pem", certs_path, 3 - i);
+        let mut file = File::create(&filename).unwrap();
+        file.write_all(&pem).unwrap();
+        println!("Saved certificate to {}", filename);
+    }
+}
 
 pub fn extract_public_key(issuer_cert_path: &str) -> BigUint {
     let mut issuer_cert_file = File::open(issuer_cert_path).expect("Failed to open cert 2PEM file");

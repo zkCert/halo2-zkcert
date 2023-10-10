@@ -161,7 +161,7 @@ fn generate_zkevm_sha256_circuit(verify_cert_path: &str, issuer_cert_path: &str,
     // println!("Generating proving key");
     let dummy_circuit = Sha256BitCircuit::new(
         CircuitBuilderStage::Keygen,
-        BaseCircuitParams {k, lookup_bits: Some(0), ..Default::default()},
+        BaseCircuitParams {k, lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
         Some(2usize.pow(k as u32) - 109),
         vec![],
         false);
@@ -171,7 +171,7 @@ fn generate_zkevm_sha256_circuit(verify_cert_path: &str, issuer_cert_path: &str,
     println!("Generating proof");
     let sha256_bit_circuit = Sha256BitCircuit::new(
         CircuitBuilderStage::Prover,
-        BaseCircuitParams {k, lookup_bits: Some(0), ..Default::default()},
+        BaseCircuitParams {k, lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
         Some(2usize.pow(k as u32) - 109),
         vec![tbs.to_vec()],
         true
@@ -184,13 +184,13 @@ fn generate_zkevm_sha256_circuit(verify_cert_path: &str, issuer_cert_path: &str,
 fn test_two_level_aggregation_split_sha256_rsa() {
     println!("Generating dummy snark");
     let snark1 = generate_zkevm_sha256_circuit(
-        "./certs/cert_3.pem",
-        "./certs/cert_2.pem",
+        "./certs/example_cert_3.pem",
+        "./certs/example_cert_2.pem",
         11
     );
     let snark2 = generate_rsa_circuit(
-        "./certs/cert_3.pem",
-        "./certs/cert_2.pem",
+        "./certs/example_cert_3.pem",
+        "./certs/example_cert_2.pem",
         16
     );
 
@@ -237,13 +237,13 @@ fn test_two_level_aggregation_split_sha256_rsa() {
     // Create second aggregation snark
     println!("Generating dummy snark");
     let snark3 = generate_zkevm_sha256_circuit(
-        "./certs/cert_2.pem",
-        "./certs/cert_1.pem",
+        "./certs/example_cert_2.pem",
+        "./certs/example_cert_1.pem",
         11
     );
     let snark4 = generate_rsa_circuit(
-        "./certs/cert_2.pem",
-        "./certs/cert_1.pem",
+        "./certs/example_cert_2.pem",
+        "./certs/example_cert_1.pem",
         16
     );
 
@@ -313,13 +313,13 @@ fn test_two_level_aggregation_split_sha256_rsa() {
 fn test_aggregation_split_zkevm_sha256_rsa1() {
     println!("Generating dummy snark");
     let snark1 = generate_zkevm_sha256_circuit(
-        "./certs/cert_3.pem",
-        "./certs/cert_2.pem",
+        "./certs/example_cert_3.pem",
+        "./certs/example_cert_2.pem",
         13
     );
     let snark2 = generate_rsa_circuit(
-        "./certs/cert_3.pem",
-        "./certs/cert_2.pem",
+        "./certs/example_cert_3.pem",
+        "./certs/example_cert_2.pem",
         16
     );
 
@@ -368,13 +368,13 @@ fn test_aggregation_split_zkevm_sha256_rsa1() {
 fn test_aggregation_split_zkevm_sha256_rsa2() {
     println!("Generating dummy snark");
     let snark1 = generate_zkevm_sha256_circuit(
-        "./certs/cert_2.pem",
-        "./certs/cert_1.pem",
+        "./certs/example_cert_2.pem",
+        "./certs/example_cert_1.pem",
         13
     );
     let snark2 = generate_rsa_circuit(
-        "./certs/cert_2.pem",
-        "./certs/cert_1.pem",
+        "./certs/example_cert_2.pem",
+        "./certs/example_cert_1.pem",
         16
     );
 
@@ -423,23 +423,23 @@ fn test_aggregation_split_zkevm_sha256_rsa2() {
 fn test_aggregation_split_zkevm_sha256_rsa3() {
     println!("Generating dummy snark");
     let snark1 = generate_zkevm_sha256_circuit(
-        "./certs/cert_3.pem",
-        "./certs/cert_2.pem",
+        "./certs/example_cert_3.pem",
+        "./certs/example_cert_2.pem",
         11
     );
     let snark2 = generate_rsa_circuit(
-        "./certs/cert_3.pem",
-        "./certs/cert_2.pem",
+        "./certs/example_cert_3.pem",
+        "./certs/example_cert_2.pem",
         16
     );
     let snark3 = generate_zkevm_sha256_circuit(
-        "./certs/cert_2.pem",
-        "./certs/cert_1.pem",
+        "./certs/example_cert_2.pem",
+        "./certs/example_cert_1.pem",
         11
     );
     let snark4 = generate_rsa_circuit(
-        "./certs/cert_2.pem",
-        "./certs/cert_1.pem",
+        "./certs/example_cert_2.pem",
+        "./certs/example_cert_1.pem",
         16
     );
 
