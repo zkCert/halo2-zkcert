@@ -30,7 +30,15 @@ struct Cli {
 
 #[derive(Debug, Subcommand, Clone)]
 enum Commands {
-    /// Generate a setup parameter (not for production).
+    /// Download TLS certificates from domain
+    DownloadTlsCerts {
+        /// k parameter for circuit.
+        #[arg(long)]
+        domain: String,
+        #[arg(short, long, default_value = "./certs/cert")]
+        certs_path: String,
+    },
+    /// Generate a setup parameter
     GenParams {
         /// k parameter for circuit.
         #[arg(long)]
@@ -203,6 +211,9 @@ enum Commands {
 async fn main() {
     let cli = Cli::parse();
     match cli.command {
+        Commands::DownloadTlsCerts { domain, certs_path } => {
+            download_tls_certs_from_domain(&domain, &certs_path);
+        },
         Commands::GenParams { k, params_path } => {
             env::set_var("PARAMS_DIR", params_path);
             gen_srs(k);

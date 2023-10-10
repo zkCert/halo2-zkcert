@@ -18,21 +18,21 @@ use std::vec;
 fn test_x509_verifier_aggregation_circuit_evm_verification1() {
     println!("Generating dummy snark");
     let snark1 = generate_unoptimized_sha256_circuit_with_instances(
-        "./certs/cert_3.pem",
+        "./certs/example_cert_3.pem",
         19
     );
     let snark2 = generate_rsa_circuit_with_instances(
-        "./certs/cert_3.pem",
-        "./certs/cert_2.pem",
+        "./certs/example_cert_3.pem",
+        "./certs/example_cert_2.pem",
         17
     );
     let snark3 = generate_unoptimized_sha256_circuit_with_instances(
-        "./certs/cert_2.pem",
+        "./certs/example_cert_2.pem",
         19
     );
     let snark4 = generate_rsa_circuit_with_instances(
-        "./certs/cert_2.pem",
-        "./certs/cert_1.pem",
+        "./certs/example_cert_2.pem",
+        "./certs/example_cert_1.pem",
         17
     );
 
