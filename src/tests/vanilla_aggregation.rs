@@ -13,7 +13,7 @@ use halo2_rsa::{
 use snark_verifier_sdk::{
     SHPLONK,
     gen_pk,
-    halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk},
+    halo2::{aggregation::{AggregationConfigParams, VerifierUniversality, AggregationCircuit}, gen_snark_shplonk, gen_proof_shplonk},
     Snark, CircuitExt,
 };
 use crate::sha256_bit_circuit::Sha256BitCircuit;
@@ -160,11 +160,12 @@ fn generate_zkevm_sha256_circuit(verify_cert_path: &str, issuer_cert_path: &str,
     
     // println!("Generating proving key");
     let dummy_circuit = Sha256BitCircuit::new(
-        CircuitBuilderStage::Keygen,
+        CircuitBuilderStage::Prover,
         BaseCircuitParams {k, lookup_bits: Some(0), num_instance_columns: 1, ..Default::default()},
         Some(2usize.pow(k as u32) - 109),
-        vec![],
-        false);
+        vec![tbs.to_vec()],
+        false
+    );
     let pk = gen_pk(&params, &dummy_circuit, None);
     
     // Generate proof
@@ -177,6 +178,7 @@ fn generate_zkevm_sha256_circuit(verify_cert_path: &str, issuer_cert_path: &str,
         true
     );
     println!("num instance: {:?}", sha256_bit_circuit.num_instance());
+    println!("instances: {:?}", sha256_bit_circuit.instances());
     gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
 }
 
