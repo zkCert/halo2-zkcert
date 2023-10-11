@@ -26,8 +26,8 @@ cargo run --release -- gen-unoptimized-sha256-keys --k 19 --pk-path ./build/unop
 // Generate proving keys for X509AggregationCircuit
 cargo run --release -- gen-x509-agg-keys --agg_k 22
 // Prove RSA
-cargo run --release -- prove-rsa --pk-path ./build/rsa.pk --verify-cert-path ./certs/cert_3.pem --issuer-cert-path ./certs/certs_2.pem
-cargo run --release -- prove-rsa --pk-path ./build/rsa.pk --verify-cert-path ./certs/cert_2.pem --issuer-cert-path ./certs/certs_1.pem
+cargo run --release -- prove-rsa --pk-path ./build/rsa.pk --verify-cert-path ./certs/cert_3.pem --issuer-cert-path ./certs/cert_2.pem
+cargo run --release -- prove-rsa --pk-path ./build/rsa.pk --verify-cert-path ./certs/cert_2.pem --issuer-cert-path ./certs/cert_1.pem
 // Prove SHA256
 cargo run --release prove-unoptimized-sha256 --pk-path ./build/unoptimized_sha256.pk --verify-cert-path ./certs/cert_3.pem --proof-path ./build/unoptimized_sha256_1.proof
 cargo run --release prove-unoptimized-sha256 --pk-path ./build/unoptimized_sha256.pk --verify-cert-path ./certs/cert_2.pem --proof-path ./build/unoptimized_sha256_2.proof
@@ -60,5 +60,7 @@ cargo test
 ## Issues
 Current issues and todos with the library. We welcome any contributions!
 1. Currently, there is an issue with aggregating vanilla ZKEVM SHA256 due to public instances not being exposed properly. See `sha256-bit-circuit.rs`. Therefore, we have to use an unoptimized sha256 library that is written entirely in halo2-lib v4
-2. Doesn't support other certificate chaining standards, such as ECDSA and SHA3 yet
-3. Doesn't support CRL (certificate revocation lists yet)
+2. Script to download TLS certs doesn't match manually inspecting the certs and downloading
+3. Doesn't support other certificate chaining standards, such as ECDSA and SHA3 yet
+4. Doesn't support CRL (certificate revocation lists yet)
+5. RSA proving key runs into `SNARK proof failed to verify` using CLI for certain PEM files. It works fine in tests which is weird
