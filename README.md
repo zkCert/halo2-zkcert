@@ -19,20 +19,18 @@ cargo build --release
 // OR
 cargo run --release download-tls-certs --domain axiom.xyz --certs-path ./certs/cert
 // Generate RSA proving keys
-cargo run --release -- gen-rsa-keys --k 17 --pk-path ./build/rsa_1.pk --verify-cert-path ./certs/cert_3.pem --issuer-cert-path ./certs/cert_2.pem
-cargo run --release -- gen-rsa-keys --k 17 --pk-path ./build/rsa_2.pk --verify-cert-path ./certs/cert_2.pem --issuer-cert-path ./certs/cert_1.pem
+cargo run --release -- gen-rsa-keys --k 17 --pk-path ./build/rsa.pk --verify-cert-path ./certs/cert_3.pem --issuer-cert-path ./certs/cert_2.pem
 // Generate SHA256 proving keys
 // TODO: fast ZKEVM SHA256 is not fully working so we use unoptimized for now
-cargo run --release -- gen-unoptimized-sha256-keys --k 19 --pk-path ./build/unoptimized_sha256_1.pk --verify-cert-path ./certs/cert_3.pem
-cargo run --release -- gen-unoptimized-sha256-keys --k 19 --pk-path ./build/unoptimized_sha256_2.pk --verify-cert-path ./certs/cert_2.pem
+cargo run --release -- gen-unoptimized-sha256-keys --k 19 --pk-path ./build/unoptimized_sha256.pk --verify-cert-path ./certs/cert_3.pem
 // Generate proving keys for X509AggregationCircuit
 cargo run --release -- gen-x509-agg-keys --agg_k 22
 // Prove RSA
-cargo run --release -- prove-rsa --pk-path ./build/rsa_1.pk --verify-cert-path ./certs/cert_3.pem --issuer-cert-path ./certs/certs_2.pem
-cargo run --release -- prove-rsa --pk-path ./build/rsa_2.pk --verify-cert-path ./certs/cert_2.pem --issuer-cert-path ./certs/certs_1.pem
+cargo run --release -- prove-rsa --pk-path ./build/rsa.pk --verify-cert-path ./certs/cert_3.pem --issuer-cert-path ./certs/certs_2.pem
+cargo run --release -- prove-rsa --pk-path ./build/rsa.pk --verify-cert-path ./certs/cert_2.pem --issuer-cert-path ./certs/certs_1.pem
 // Prove SHA256
-cargo run --release prove-unoptimized-sha256 --pk-path ./build/unoptimized_sha256_1.pk --verify-cert-path ./certs/cert_3.pem --proof-path ./build/unoptimized_sha256_1.proof
-cargo run --release prove-unoptimized-sha256 --pk-path ./build/unoptimized_sha256_2.pk --verify-cert-path ./certs/cert_2.pem --proof-path ./build/unoptimized_sha256_2.proof
+cargo run --release prove-unoptimized-sha256 --pk-path ./build/unoptimized_sha256.pk --verify-cert-path ./certs/cert_3.pem --proof-path ./build/unoptimized_sha256_1.proof
+cargo run --release prove-unoptimized-sha256 --pk-path ./build/unoptimized_sha256.pk --verify-cert-path ./certs/cert_2.pem --proof-path ./build/unoptimized_sha256_2.proof
 // Prove aggregation and verify in smart contract
 cargo run --release -- gen-x509-agg-evm-proof
 ```
@@ -43,16 +41,16 @@ cargo test
 ```
 
 ## Benchmarks
-| Circuit                          | `k` | Num Advice | Num Lookup Advice | Num Fixed | Proof Time (M1)  | Proof Time (EC2 c6a.48xlarge) |
-| ---------------------------------| --- | ---------- | ----------------- | --------- | ---------------- | ------------------------ |
-| SHA256 (unoptimized - 1280 bytes)| 16  | 81         | 1                 | 1         | 15.870s          |                          |
-| SHA256 (unoptimized - 1280 bytes)| 17  | 41         | 1                 | 1         | 16.432s          |                          |
-| SHA256 (unoptimized - 1280 bytes)| 18  | 21         | 1                 | 1         | 17.857s          |                          |
-| SHA256 (unoptimized - 1280 bytes)| 19  | 11         | 1                 | 1         | 20.724s          |                          |
-| RSA                              | 15  | 12         | 1                 | 1         | 1.783s           |                          |
-| RSA                              | 16  | 6          | 1                 | 1         | 2.224s           |                          |
-| RSA                              | 17  | 3          | 1                 | 1         | 3.144s           |                          |
-| X509Aggregation (SHA256 k=19, RSA k=17) | 22  | 5          | 1                 | 1         | N/A | 102.088s (reading pk) + 41.653s (proof gen) |
+| Circuit                          | `k` | Num Advice | Num Lookup Advice | Num Fixed | Proof Time (M1 16GB)  | Proof Time (EC2 c6a.48xlarge) |
+| ---------------------------------| --- | ---------- | ----------------- | --------- | --------------------- | ----------------------------- |
+| SHA256 (unoptimized - 1280 bytes)| 16  | 81         | 1                 | 1         | 15.870s               |                          |
+| SHA256 (unoptimized - 1280 bytes)| 17  | 41         | 1                 | 1         | 16.432s               |                          |
+| SHA256 (unoptimized - 1280 bytes)| 18  | 21         | 1                 | 1         | 17.857s               |                          |
+| SHA256 (unoptimized - 1280 bytes)| 19  | 11         | 1                 | 1         | 20.724s               |                    |
+| RSA                              | 15  | 12         | 1                 | 1         | 1.783s                | 1.245s                   |
+| RSA                              | 16  | 6          | 1                 | 1         | 2.224s                | 1.509s                   |
+| RSA                              | 17  | 3          | 1                 | 1         | 3.144s                | 1.813s                   |
+| X509Aggregation (SHA256 k=19, RSA k=17) | 22  | 5          | 1                 | 1  | N/A | 102.088s (reading pk) + 41.653s (proof gen) |
 
 ## Dependencies
 - [Halo2-RSA](https://github.com/zkpdf/halo2-rsa) (Fork of zkemail halo2-rsa that is compatible with halo2-lib v4)

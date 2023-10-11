@@ -55,7 +55,7 @@ enum Commands {
         #[arg(short, long, default_value = "./params")]
         params_path: String,
         /// proving key path
-        #[arg(long, default_value = "./build/rsa_1.pk")]
+        #[arg(long, default_value = "./build/rsa.pk")]
         pk_path: String,
         #[arg(long, default_value = "./certs/cert_3.pem")]
         verify_cert_path: String,
@@ -71,7 +71,7 @@ enum Commands {
         #[arg(short, long, default_value = "./params")]
         params_path: String,
         /// proving key path
-        #[arg(long, default_value = "./build/unoptimized_sha256_1.pk")]
+        #[arg(long, default_value = "./build/unoptimized_sha256.pk")]
         pk_path: String,
         #[arg(long, default_value = "./certs/cert_3.pem")]
         verify_cert_path: String,
@@ -85,7 +85,7 @@ enum Commands {
         #[arg(short, long, default_value = "./params")]
         params_path: String,
         /// proving key path
-        #[arg(long, default_value = "./build/zkevm_sha256_1.pk")]
+        #[arg(long, default_value = "./build/zkevm_sha256.pk")]
         pk_path: String,
         #[arg(long, default_value = "./certs/cert_3.pem")]
         verify_cert_path: String,
@@ -98,7 +98,7 @@ enum Commands {
         #[arg(short, long, default_value = "./params")]
         params_path: String,
         /// proving key path
-        #[arg(long, default_value = "./build/rsa_1.pk")]
+        #[arg(long, default_value = "./build/rsa.pk")]
         pk_path: String,
         #[arg(long, default_value = "./certs/cert_3.pem")]
         verify_cert_path: String,
@@ -116,7 +116,7 @@ enum Commands {
         #[arg(short, long, default_value = "./params")]
         params_path: String,
         /// proving key path
-        #[arg(long, default_value = "./build/unoptimized_sha256_1.pk")]
+        #[arg(long, default_value = "./build/unoptimized_sha256.pk")]
         pk_path: String,
         #[arg(long, default_value = "./certs/cert_3.pem")]
         verify_cert_path: String,
@@ -131,7 +131,7 @@ enum Commands {
         #[arg(short, long, default_value = "./params")]
         params_path: String,
         /// proving key path
-        #[arg(long, default_value = "./build/zkevm_sha256_1.pk")]
+        #[arg(long, default_value = "./build/zkevm_sha256.pk")]
         pk_path: String,
         #[arg(long, default_value = "./certs/cert_3.pem")]
         verify_cert_path: String,
