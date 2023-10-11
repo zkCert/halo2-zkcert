@@ -1,6 +1,6 @@
 # halo2-zkcert
 
-Halo2 library to verify a chain of certificates. Currently supports RSA signature scheme and SHA256 hash function. In the future, we can support more certificate chaining standards such as ECDSA, SHA3 etc i.e. [here](https://github.com/rusticata/x509-parser/blob/master/src/verify.rs)
+Halo2 library to verify a chain of certificates which is used in TLS initial handshake, document signing and VPNs. Currently supports RSA signature scheme and SHA256 hash function. In the future, we can support more certificate chaining standards such as ECDSA, SHA3 etc i.e. [here](https://github.com/rusticata/x509-parser/blob/master/src/verify.rs)
 
 > Note: Doesn't verify the self-signed root certificate which uses SHA1. This is fine because root certificates are assumed to be trusted.
 
@@ -13,15 +13,28 @@ cd halo2-zkcert
 cargo build --release
 ```
 
-## Usage
-Copy certificate files into `certs` folder. See `src/bin/cli.rs` file for commands
+## Example Usage
 ```
-cargo run --release -- gen-params --k 20
-cargo run --release -- gen-unoptimized-sha256-keys --k 17 --pk-path ./build/unoptimized_sha256_2.pk --verify-cert-path ./certs/cert_2.pem
+// Import your own chain of x509 certificates and save them as PEM files in `certs` folder. Where 1 is root certificate and 3 is leaf certificate
+// OR
+cargo run --release download-tls-certs --domain axiom.xyz --certs-path ./certs/cert
+// Generate RSA proving keys
+cargo run --release -- gen-rsa-keys --k 17 --pk-path ./build/rsa_1.pk --verify-cert-path ./certs/cert_3.pem --issuer-cert-path ./certs/cert_2.pem
 cargo run --release -- gen-rsa-keys --k 17 --pk-path ./build/rsa_2.pk --verify-cert-path ./certs/cert_2.pem --issuer-cert-path ./certs/cert_1.pem
-cargo run --release -- gen-x509-agg-keys --agg_k 20
-cargo run --release -- prove-unoptimized-sha256 --k 17
-cargo run --release -- prove-rsa --k 17
+// Generate SHA256 proving keys
+// TODO: fast ZKEVM SHA256 is not fully working so we use unoptimized for now
+cargo run --release -- gen-unoptimized-sha256-keys --k 19 --pk-path ./build/unoptimized_sha256_1.pk --verify-cert-path ./certs/cert_3.pem
+cargo run --release -- gen-unoptimized-sha256-keys --k 19 --pk-path ./build/unoptimized_sha256_2.pk --verify-cert-path ./certs/cert_2.pem
+// Generate proving keys for X509AggregationCircuit
+cargo run --release -- gen-x509-agg-keys --agg_k 22
+// Prove RSA
+cargo run --release -- prove-rsa --pk-path ./build/rsa_1.pk --verify-cert-path ./certs/cert_3.pem --issuer-cert-path ./certs/certs_2.pem
+cargo run --release -- prove-rsa --pk-path ./build/rsa_2.pk --verify-cert-path ./certs/cert_2.pem --issuer-cert-path ./certs/certs_1.pem
+// Prove SHA256
+cargo run --release prove-unoptimized-sha256 --pk-path ./build/unoptimized_sha256_1.pk --verify-cert-path ./certs/cert_3.pem --proof-path ./build/unoptimized_sha256_1.proof
+cargo run --release prove-unoptimized-sha256 --pk-path ./build/unoptimized_sha256_2.pk --verify-cert-path ./certs/cert_2.pem --proof-path ./build/unoptimized_sha256_2.proof
+// Prove aggregation and verify in smart contract
+cargo run --release -- gen-x509-agg-evm-proof
 ```
 
 ## Test
@@ -29,6 +42,12 @@ cargo run --release -- prove-rsa --k 17
 cargo test
 ```
 
+## Benchmarks
+| Circuit                          | `k` | Num Advice | Num Lookup Advice | Num Fixed | Proof Time (EC2 c5.48xlarge)                |
+| ---------------------------------| --- | ---------- | ----------------- | --------- | ------------------------------------------- |
+| SHA256 (unoptimized - 1280 bytes)| 19  | 11         | 1                 | 1         | 20s                                         |
+| RSA                              | 17  | 3          | 1                 | 1         | 3s                                          |
+| X509Aggregation                  | 22  | 5          | 1                 | 1         | 102.088s (reading pk) + 41.653s (proof gen) |
 
 ## Dependencies
 - [Halo2-RSA](https://github.com/zkpdf/halo2-rsa) (Fork of zkemail halo2-rsa that is compatible with halo2-lib v4)
@@ -36,7 +55,7 @@ cargo test
 - [ZKEVM SHA256](https://github.com/axiom-crypto/halo2-lib/tree/feat/zkevm-sha256/hashes/zkevm/src/sha256)
 
 ## Issues
-Current issues with the library. We welcome any contributions!
+Current issues and todos with the library. We welcome any contributions!
 1. Currently, there is an issue with aggregating vanilla ZKEVM SHA256 due to public instances not being exposed properly. See `sha256-bit-circuit.rs`. Therefore, we have to use an unoptimized sha256 library that is written entirely in halo2-lib v4
-2. Missing script to extract chain of certificates from raw document and separate out into different PEM files in certs folder
-3. Doesn't support other certificate chaining standards, such as ECDSA and SHA3 yet
+2. Doesn't support other certificate chaining standards, such as ECDSA and SHA3 yet
+3. Doesn't support CRL (certificate revocation lists yet)
