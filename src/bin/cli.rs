@@ -18,7 +18,7 @@ use snark_verifier_sdk::{
     CircuitExt
 };
 use std::path::Path;
-use std::fs::File;
+use std::fs::{File, remove_file};
 use std::io::prelude::*;
 
 #[derive(Parser, Debug, Clone)]
@@ -233,6 +233,12 @@ async fn main() {
 
             let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint);
 
+            if Path::new(&pk_path).exists() {
+                match remove_file(&pk_path) {
+                    Ok(_) => println!("File found, overwriting..."),
+                    Err(e) => println!("An error occurred: {}", e),
+                }
+            }
             gen_pk(&params, &builder, Some(Path::new(&pk_path)));
         },
         Commands::GenUnoptimizedSha256Keys {
@@ -248,6 +254,12 @@ async fn main() {
 
             let builder = create_default_unoptimized_sha256_circuit_with_instances(k as usize, tbs);
 
+            if Path::new(&pk_path).exists() {
+                match remove_file(&pk_path) {
+                    Ok(_) => println!("File found, overwriting..."),
+                    Err(e) => println!("An error occurred: {}", e),
+                }
+            }
             gen_pk(&params, &builder, Some(Path::new(&pk_path)));
         },
         Commands::GenZkevmSha256Keys {
@@ -269,6 +281,13 @@ async fn main() {
                 false
             );
 
+            if Path::new(&pk_path).exists() {
+                match remove_file(&pk_path) {
+                    Ok(_) => println!("File found, overwriting..."),
+                    Err(e) => println!("An error occurred: {}", e),
+                }
+            }
+
             gen_pk(&params, &dummy_circuit, Some(Path::new(&pk_path)));
         },
         Commands::ProveRsa {
@@ -288,6 +307,12 @@ async fn main() {
             let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint);
             let pk = read_pk::<BaseCircuitBuilder<Fr>>(Path::new(&pk_path), builder.params()).unwrap();
 
+            if Path::new(&proof_path).exists() {
+                match remove_file(&proof_path) {
+                    Ok(_) => println!("File found, overwriting..."),
+                    Err(e) => println!("An error occurred: {}", e),
+                }
+            }
             gen_snark_shplonk(&params, &pk, builder, Some(Path::new(&proof_path)));
         },
         Commands::ProveUnoptimizedSha256 {
@@ -305,6 +330,12 @@ async fn main() {
             let builder = create_default_unoptimized_sha256_circuit_with_instances(k as usize, tbs);
             let pk = read_pk::<BaseCircuitBuilder<Fr>>(Path::new(&pk_path), builder.params()).unwrap();
 
+            if Path::new(&proof_path).exists() {
+                match remove_file(&proof_path) {
+                    Ok(_) => println!("File found, overwriting..."),
+                    Err(e) => println!("An error occurred: {}", e),
+                }
+            }
             gen_snark_shplonk(&params, &pk, builder, Some(Path::new(&proof_path)));
         },
         Commands::ProveZkevmSha256 {
@@ -328,6 +359,12 @@ async fn main() {
             );
             let pk = read_pk::<BaseCircuitBuilder<Fr>>(Path::new(&pk_path), base_circuit_params).unwrap();
 
+            if Path::new(&proof_path).exists() {
+                match remove_file(&proof_path) {
+                    Ok(_) => println!("File found, overwriting..."),
+                    Err(e) => println!("An error occurred: {}", e),
+                }
+            }
             gen_snark_shplonk(&params, &pk, sha256_bit_circuit, Some(Path::new(&proof_path)));
         },
         Commands::GenX509AggKeys {
@@ -415,6 +452,12 @@ async fn main() {
             ).use_break_points(break_points.clone());
 
             let pk = read_pk::<AggregationCircuit>(Path::new(&pk_path), agg_circuit.params()).unwrap();
+            if Path::new(&agg_proof_path).exists() {
+                match remove_file(&agg_proof_path) {
+                    Ok(_) => println!("File found, overwriting..."),
+                    Err(e) => println!("An error occurred: {}", e),
+                }
+            }
             gen_snark_shplonk(&agg_params, &pk, agg_circuit.clone(), Some(Path::new(&agg_proof_path)));
         },
         Commands::GenX509AggEVMProof {

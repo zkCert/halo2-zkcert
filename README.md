@@ -43,11 +43,16 @@ cargo test
 ```
 
 ## Benchmarks
-| Circuit                          | `k` | Num Advice | Num Lookup Advice | Num Fixed | Proof Time (EC2 c5.48xlarge)                |
-| ---------------------------------| --- | ---------- | ----------------- | --------- | ------------------------------------------- |
-| SHA256 (unoptimized - 1280 bytes)| 19  | 11         | 1                 | 1         | 20s                                         |
-| RSA                              | 17  | 3          | 1                 | 1         | 3s                                          |
-| X509Aggregation                  | 22  | 5          | 1                 | 1         | 102.088s (reading pk) + 41.653s (proof gen) |
+| Circuit                          | `k` | Num Advice | Num Lookup Advice | Num Fixed | Proof Time (M1)  | Proof Time (EC2 c6a.48xlarge) |
+| ---------------------------------| --- | ---------- | ----------------- | --------- | ---------------- | ------------------------ |
+| SHA256 (unoptimized - 1280 bytes)| 16  | 81         | 1                 | 1         | 15.870s          |                          |
+| SHA256 (unoptimized - 1280 bytes)| 17  | 41         | 1                 | 1         | 16.432s          |                          |
+| SHA256 (unoptimized - 1280 bytes)| 18  | 21         | 1                 | 1         | 17.857s          |                          |
+| SHA256 (unoptimized - 1280 bytes)| 19  | 11         | 1                 | 1         | 20.724s          |                          |
+| RSA                              | 15  | 12         | 1                 | 1         | 1.783s           |                          |
+| RSA                              | 16  | 6          | 1                 | 1         | 2.224s           |                          |
+| RSA                              | 17  | 3          | 1                 | 1         | 3.144s           |                          |
+| X509Aggregation (SHA256 k=19, RSA k=17) | 22  | 5          | 1                 | 1         | N/A | 102.088s (reading pk) + 41.653s (proof gen) |
 
 ## Dependencies
 - [Halo2-RSA](https://github.com/zkpdf/halo2-rsa) (Fork of zkemail halo2-rsa that is compatible with halo2-lib v4)
