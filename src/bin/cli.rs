@@ -271,13 +271,11 @@ async fn main() {
             env::set_var("PARAMS_DIR", params_path);
             let params = gen_srs(k);
 
-            let (tbs, _) = extract_tbs_and_sig(&verify_cert_path);
+            // let (tbs, _) = extract_tbs_and_sig(&verify_cert_path);
 
             let dummy_circuit = Sha256BitCircuit::new(
-                CircuitBuilderStage::Keygen,
-                BaseCircuitParams {k: k as usize, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1},
                 Some(2usize.pow(k) - 109),
-                vec![tbs.to_vec()],
+                vec![],
                 false
             );
 
@@ -349,16 +347,13 @@ async fn main() {
             let params = gen_srs(k);
 
             let (tbs, _) = extract_tbs_and_sig(&verify_cert_path);
-            let base_circuit_params = BaseCircuitParams {k: k as usize, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1};
+
             let sha256_bit_circuit = Sha256BitCircuit::new(
-                CircuitBuilderStage::Prover,
-                base_circuit_params.clone(),
                 Some(2usize.pow(k) - 109),
                 vec![tbs.to_vec()],
                 true
             );
-            let pk = read_pk::<BaseCircuitBuilder<Fr>>(Path::new(&pk_path), base_circuit_params).unwrap();
-
+            let pk = read_pk::<Sha256BitCircuit<Fr>>(Path::new(&pk_path), ()).unwrap();
             if Path::new(&proof_path).exists() {
                 match remove_file(&proof_path) {
                     Ok(_) => println!("File found, overwriting..."),

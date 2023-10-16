@@ -1,6 +1,6 @@
 use halo2_base::{
     AssignedValue,
-    halo2_proofs::halo2curves::bn256::Fr,
+    halo2_proofs::halo2curves::{bn256::Fr, ff::PrimeField},
     gates::{
         circuit::builder::BaseCircuitBuilder,
         GateInstructions
@@ -17,7 +17,7 @@ use snark_verifier_sdk::{
     halo2::gen_snark_shplonk,
     Snark,
 };
-
+use crate::sha256_bit_circuit::Sha256BitCircuit;
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Read;
@@ -224,4 +224,32 @@ pub fn generate_unoptimized_sha256_circuit_with_instances(verify_cert_path: &str
     // Generate proof
     println!("Generating proof");
     gen_snark_shplonk(&params, &pk, builder, None::<&str>)
+}
+
+pub fn generate_zkevm_sha256_circuit(verify_cert_path: &str, k: usize) -> Snark {
+    let (tbs, _) = extract_tbs_and_sig(verify_cert_path);
+
+    // Generate params
+    println!("Generate params");
+    let params = gen_srs(k as u32);
+    
+    // println!("Generating proving key");
+    let dummy_circuit = Sha256BitCircuit::new(
+        Some(2usize.pow(k as u32) - 109),
+        vec![tbs.to_vec()],
+        false
+    );
+    let pk = gen_pk(&params, &dummy_circuit, None);
+    println!("pk stats: {:?} {:?} {:?} {:?}", pk.get_vk().cs().num_selectors(), pk.get_vk().cs().num_advice_columns(), pk.get_vk().cs().num_fixed_columns(), pk.get_vk().cs().num_instance_columns());
+    // Generate proof
+    println!("Generating proof");
+    let mut sha256_bit_circuit = Sha256BitCircuit::new(
+        Some(2usize.pow(k as u32) - 109),
+        vec![tbs.to_vec()],
+        true
+    );
+    sha256_bit_circuit.set_instances(vec![
+        Fr::from_u128(0x00000000000000000000000000000000eeb16b6a466d78243f0210594c79e2ea),
+        Fr::from_u128(0x000000000000000000000000000000005773a131a99b9c98158c743ebd7e521a)]);
+    gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
 }

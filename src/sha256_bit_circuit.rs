@@ -1,6 +1,7 @@
 use halo2_base::gates::circuit::BaseCircuitParams;
 use halo2_base::gates::circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage};
 use halo2_base::halo2_proofs::halo2curves::ff::PrimeField;
+use zkevm_hashes::keccak::coprocessor::output;
 // Generate Sha256BitCircuit
 use zkevm_hashes::util::eth_types::Field;
 use std::borrow::BorrowMut;
@@ -40,7 +41,6 @@ pub struct Sha256BitCircuitConfig<F: Field> {
 #[derive(Default)]
 pub struct Sha256BitCircuit<Fr> {
     inputs: Vec<Vec<u8>>,
-    // builder: RefCell<BaseCircuitBuilder<Fr>>,
     num_rows: Option<usize>,
     assigned_instances: RefCell<Vec<Vec<Fr>>>,
     witness_gen_only: bool,
@@ -95,58 +95,36 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
                             break;
                         }
                     }
+                    let value = **value_to_option(final_block.output().lo().value()).unwrap();
+                    let value = match value {
+                        Assigned::Trivial(v) => v,
+                        Assigned::Zero => F::ZERO,
+                        Assigned::Rational(a, b) => a * b.invert().unwrap(),
+                    };
                 }
-
-                // let builder = self.builder.borrow_mut();
-                // let mut copy_manager = builder.core().copy_manager.lock().unwrap();
                 
                 let result = [
-                    final_block.is_final().clone(),
                     final_block.output().lo().clone(),
                     final_block.output().hi().clone(),
-                    final_block.length().clone(),
-                ];
-                {
-                    println!("Num advice columns: 18"); // fixed at 18
-                    println!("Num rows: {:?}", self.num_rows);
-                }
-
-                println!("instance 1 {:?}", region.instance_value(config.instance, 0));
-                println!("instance 2 {:?}", region.instance_value(config.instance, 1));
-                println!("instance 3 {:?}", region.instance_value(config.instance, 2));
-                println!("instance 4 {:?}", region.instance_value(config.instance, 3));
-
-                Ok(result)
-            },
-        )?;
-
-        if self.witness_gen_only {
-            result.iter().map(|x| {
-                let value = **value_to_option(x.value()).unwrap();
-                let value = match value {
-                    Assigned::Trivial(v) => v,
-                    Assigned::Zero => F::ZERO,
-                    Assigned::Rational(a, b) => a * b.invert().unwrap(),
-                };
-                // Convert F to Fr
-                let assigned = &mut self.assigned_instances.borrow_mut();
-                assigned[0].push(value);
-                println!("test{:?}", assigned);
-            }).collect_vec();
-        }
-
-        println!("instance 1 value {:?}", result[0].value());
-        println!("instance 1 value {:?}", result[1].value());
-        println!("instance 1 value {:?}", result[2].value());
-        println!("instance 1 value {:?}", result[3].value());
-
+                    ];
+                    {
+                        println!("Num rows: {:?}", self.num_rows);
+                    }
+                    
+                    // println!("instance 1 {:?}", region.instance_value(config.instance, 0));
+                    // println!("instance 2 {:?}", region.instance_value(config.instance, 1));
+                    // println!("instance 3 {:?}", region.instance_value(config.instance, 2));
+                    // println!("instance 4 {:?}", region.instance_value(config.instance, 3));
+                    
+                    Ok(result)
+                },
+            )?;
+            
+            println!("res value {:?}", result[0].value());
+            println!("res value {:?}", result[1].value());
+            
         layouter.constrain_instance(result[0].cell(), config.instance, 0);
         layouter.constrain_instance(result[1].cell(), config.instance, 1);
-        layouter.constrain_instance(result[2].cell(), config.instance, 2);
-        layouter.constrain_instance(result[3].cell(), config.instance, 3);
-
-        println!("assign: {:?}", self.assigned_instances.borrow());
-        println!("assign: {:?}", self.assigned_instances.borrow()[0].len());
 
         Ok(())
     }
@@ -155,15 +133,10 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
 impl<F: Field> Sha256BitCircuit<F> {
     /// Creates a new circuit instance
     pub fn new(
-        stage: CircuitBuilderStage,
-        config_params: BaseCircuitParams,
         num_rows: Option<usize>,
         inputs: Vec<Vec<u8>>,
         witness_gen_only: bool
     ) -> Self {
-        println!("config_params: {:?}", config_params.clone());
-        // let builder = BaseCircuitBuilder::from_stage(stage).use_params(config_params);
-
         Sha256BitCircuit { num_rows, inputs, witness_gen_only, assigned_instances: RefCell::new(vec![vec![]]), _marker: PhantomData }
     }
 
@@ -228,19 +201,13 @@ impl<F: Field> Sha256BitCircuit<F> {
 
 }
 
-impl CircuitExt<Fr> for Sha256BitCircuit<Fr> {
+impl<F: Field> CircuitExt<F> for Sha256BitCircuit<F> {
     fn num_instance(&self) -> Vec<usize> {
-        vec![4]
+        vec![2]
     }
 
-    fn instances(&self) -> Vec<Vec<Fr>> {
-        vec![
-            vec![
-                Fr::from_u128(0x0000000000000000000000000000000000000000000000000000000000000001),
-                Fr::from_u128(0x00000000000000000000000000000000eeb16b6a466d78243f0210594c79e2ea),
-                Fr::from_u128(0x000000000000000000000000000000005773a131a99b9c98158c743ebd7e521a),
-                Fr::from_u128(0x00000000000000000000000000000000000000000000000000000000000004af)
-            ]
-        ]
+    fn instances(&self) -> Vec<Vec<F>> {
+        println!("instances: {:?}", self.assigned_instances.borrow().clone());
+        self.assigned_instances.borrow().clone()
     }
 }
