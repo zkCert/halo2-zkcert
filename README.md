@@ -59,8 +59,7 @@ cargo test
 
 ## Issues
 Current issues and todos with the library. We welcome any contributions!
-1. Currently, there is an issue with aggregating vanilla ZKEVM SHA256 due to public instances not being exposed properly. See `sha256-bit-circuit.rs`. Therefore, we have to use an unoptimized sha256 library that is written entirely in halo2-lib v4
-2. Script to download TLS certs doesn't match manually inspecting the certs and downloading
-3. Doesn't support other certificate chaining standards, such as ECDSA and SHA3 yet
-4. Doesn't support CRL (certificate revocation lists yet)
-5. RSA proving key runs into `SNARK proof failed to verify` using CLI for certain PEM files. It works fine in tests which is weird
+1. Script to download TLS certs doesn't match manually inspecting the certs and downloading
+2. Doesn't support other certificate chaining standards, such as ECDSA and SHA3 yet
+3. Doesn't support CRL (certificate revocation lists yet)
+4. For RSA and SHA256 circuits, Mock prover is satisfied, but cannot verify a real proof (we can create proof, but fails in vk). Is it something to do with my snark-verifier version?

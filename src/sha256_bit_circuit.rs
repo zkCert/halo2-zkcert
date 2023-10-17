@@ -1,6 +1,3 @@
-use halo2_base::gates::circuit::BaseCircuitParams;
-use halo2_base::gates::circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage};
-// Generate Sha256BitCircuit
 use zkevm_hashes::util::eth_types::Field;
 use std::marker::PhantomData;
 use zkevm_hashes::sha256::vanilla::{
@@ -10,7 +7,6 @@ use zkevm_hashes::sha256::vanilla::{
 };
 use halo2_base::halo2_proofs::{
     circuit::SimpleFloorPlanner,
-    halo2curves::bn256::Fr,
     plonk::Circuit,
 };
 use halo2_base::{
@@ -24,7 +20,6 @@ use halo2_base::{
     },
 };
 use sha2::{Digest, Sha256};
-use std::cell::RefCell;
 use snark_verifier_sdk::CircuitExt;
 use itertools::Itertools;
 
@@ -38,8 +33,8 @@ pub struct Sha256BitCircuitConfig<F: Field> {
 #[derive(Default)]
 pub struct Sha256BitCircuit<F: Field> {
     inputs: Vec<Vec<u8>>,
-    builder: RefCell<BaseCircuitBuilder<F>>,
     num_rows: Option<usize>,
+    assigned_instances: Vec<Vec<F>>,
     witness_gen_only: bool,
     _marker: PhantomData<F>,
 }
@@ -75,7 +70,6 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
                     self.num_rows.map(get_sha2_capacity),
                 );
                 println!("Witness generation time: {:?}", start.elapsed());
-                
                 // Find the block where the final output is
                 let mut final_block = blocks[0].clone();
                 if self.witness_gen_only {
@@ -93,33 +87,25 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
                         }
                     }
                 }
-
-                let builder = self.builder.borrow_mut();
-                let mut copy_manager = builder.core().copy_manager.lock().unwrap();
                 
                 let result = [
-                    final_block.is_final().clone(),
                     final_block.output().lo().clone(),
                     final_block.output().hi().clone(),
-                    final_block.length().clone(),
-                ].iter().map(|x| copy_manager.load_external_assigned(x.clone())).collect_vec();
-                {
-                    println!("Num advice columns: 18"); // fixed at 18
-                    println!("Num rows: {:?}", self.num_rows);
-                }
+                    ];
+                    {
+                        println!("Num rows: {:?}", self.num_rows);
+                    }
+                    
+                    Ok(result)
+                },
+            )?;
 
-                Ok(result)
-            },
-        )?;
-
-        // TODO: How do you expose these instances publicly?
-        let builder = &mut self.builder.borrow_mut();
-        builder.assigned_instances[0].extend(result);
-
-        println!("assigned_instances: {:?}", builder.assigned_instances);
-        
-        // TODO: this makes the proof fail
-        // builder.assign_instances(&[config.instance], layouter);
+        if !self.witness_gen_only {
+            // expose public instances
+            let mut layouter = layouter.namespace(|| "expose");
+            layouter.constrain_instance(result[0].cell(), config.instance, 0);
+            layouter.constrain_instance(result[1].cell(), config.instance, 1);
+        }
 
         Ok(())
     }
@@ -128,16 +114,18 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
 impl<F: Field> Sha256BitCircuit<F> {
     /// Creates a new circuit instance
     pub fn new(
-        stage: CircuitBuilderStage,
-        config_params: BaseCircuitParams,
         num_rows: Option<usize>,
         inputs: Vec<Vec<u8>>,
         witness_gen_only: bool
     ) -> Self {
-        println!("config_params: {:?}", config_params.clone());
-        let builder = BaseCircuitBuilder::from_stage(stage).use_params(config_params);
+        Sha256BitCircuit { num_rows, inputs, witness_gen_only, assigned_instances: vec![vec![]], _marker: PhantomData }
+    }
 
-        Sha256BitCircuit { num_rows, inputs, witness_gen_only, builder: RefCell::new(builder), _marker: PhantomData }
+    pub fn set_instances(
+        &mut self,
+        instances: Vec<F>,
+    ) {
+        self.assigned_instances[0].extend(instances);
     }
 
     fn verify_output(&self, assigned_blocks: &[AssignedSha256Block<F>]) {
@@ -194,16 +182,12 @@ impl<F: Field> Sha256BitCircuit<F> {
 
 }
 
-impl CircuitExt<Fr> for Sha256BitCircuit<Fr> {
+impl<F: Field> CircuitExt<F> for Sha256BitCircuit<F> {
     fn num_instance(&self) -> Vec<usize> {
-        let a = &mut self.builder.borrow_mut().assigned_instances;
-        a.iter().map(|instances| instances.len()).collect()
+        self.assigned_instances.iter().map(|instances| instances.len()).collect_vec()
     }
 
-    fn instances(&self) -> Vec<Vec<Fr>> {
-        let a = &mut self.builder.borrow_mut().assigned_instances;
-        a.iter().map(|x| {
-            x.iter().map(|y| *y.value()).collect_vec()
-        }).collect_vec()
+    fn instances(&self) -> Vec<Vec<F>> {
+        self.assigned_instances.clone()
     }
 }

@@ -6,7 +6,7 @@ use std::env;
 use halo2_base::{
     halo2_proofs::halo2curves::bn256::Fr,
     halo2_proofs::plonk::Circuit,
-    gates::circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage, BaseCircuitParams},
+    gates::circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
     gates::flex_gate::MultiPhaseThreadBreakPoints,
     utils::fs::gen_srs
 };
@@ -231,7 +231,7 @@ async fn main() {
             let (tbs, signature_bigint) = extract_tbs_and_sig(&verify_cert_path);
             let public_key_modulus = extract_public_key(&issuer_cert_path);
 
-            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint);
+            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
 
             if Path::new(&pk_path).exists() {
                 match remove_file(&pk_path) {
@@ -274,10 +274,8 @@ async fn main() {
             let (tbs, _) = extract_tbs_and_sig(&verify_cert_path);
 
             let dummy_circuit = Sha256BitCircuit::new(
-                CircuitBuilderStage::Keygen,
-                BaseCircuitParams {k: k as usize, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1},
                 Some(2usize.pow(k) - 109),
-                vec![tbs.to_vec()],
+                vec![tbs],
                 false
             );
 
@@ -304,7 +302,7 @@ async fn main() {
             let (tbs, signature_bigint) = extract_tbs_and_sig(&verify_cert_path);
             let public_key_modulus = extract_public_key(&issuer_cert_path);
             
-            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint);
+            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint, true, vec![vec![]]);
             let pk = read_pk::<BaseCircuitBuilder<Fr>>(Path::new(&pk_path), builder.params()).unwrap();
 
             if Path::new(&proof_path).exists() {
@@ -349,16 +347,13 @@ async fn main() {
             let params = gen_srs(k);
 
             let (tbs, _) = extract_tbs_and_sig(&verify_cert_path);
-            let base_circuit_params = BaseCircuitParams {k: k as usize, num_fixed: 1, num_advice_per_phase: vec![1, 0, 0], num_lookup_advice_per_phase: vec![0, 0, 0], lookup_bits: Some(0), num_instance_columns: 1};
+
             let sha256_bit_circuit = Sha256BitCircuit::new(
-                CircuitBuilderStage::Prover,
-                base_circuit_params.clone(),
                 Some(2usize.pow(k) - 109),
                 vec![tbs.to_vec()],
                 true
             );
-            let pk = read_pk::<BaseCircuitBuilder<Fr>>(Path::new(&pk_path), base_circuit_params).unwrap();
-
+            let pk = read_pk::<Sha256BitCircuit<Fr>>(Path::new(&pk_path), ()).unwrap();
             if Path::new(&proof_path).exists() {
                 match remove_file(&proof_path) {
                     Ok(_) => println!("File found, overwriting..."),

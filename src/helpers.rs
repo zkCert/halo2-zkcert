@@ -1,6 +1,6 @@
 use halo2_base::{
     AssignedValue,
-    halo2_proofs::halo2curves::bn256::Fr,
+    halo2_proofs::{halo2curves::bn256::{Fr, G1Affine}, plonk::ProvingKey},
     gates::{
         circuit::builder::BaseCircuitBuilder,
         GateInstructions
@@ -17,7 +17,7 @@ use snark_verifier_sdk::{
     halo2::gen_snark_shplonk,
     Snark,
 };
-
+use crate::sha256_bit_circuit::Sha256BitCircuit;
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Read;
@@ -98,7 +98,9 @@ pub fn create_default_rsa_circuit_with_instances(
     k: usize,
     tbs: Vec<u8>,
     public_key_modulus: BigUint,
-    signature_bigint: BigUint
+    signature_bigint: BigUint,
+    witness_gen_only: bool,
+    break_points: Vec<Vec<usize>>
 ) -> BaseCircuitBuilder<Fr> {
     // Circuit inputs
     let limb_bits = 64;
@@ -106,7 +108,13 @@ pub fn create_default_rsa_circuit_with_instances(
     let exp_bits = 5; // UNUSED
     let default_e = 65537_u32;
 
-    let mut builder = BaseCircuitBuilder::new(false);
+    let mut builder = {
+        if witness_gen_only {
+            BaseCircuitBuilder::new(witness_gen_only).use_break_points(break_points)
+        } else {
+            BaseCircuitBuilder::new(witness_gen_only)
+        }
+    };
     // Set rows
     builder.set_k(k);
     builder.set_lookup_bits(k - 1);
@@ -157,6 +165,7 @@ pub fn create_default_rsa_circuit_with_instances(
     // Insert input hash as public instance for circuit
     hashed_bytes.reverse();
     builder.assigned_instances[0].extend(hashed_bytes);
+    println!("Assigned instances: {:?}", builder.assigned_instances[0]);
 
     let circuit_params = builder.calculate_params(Some(10));
     println!("Circuit params: {:?}", circuit_params);
@@ -190,12 +199,48 @@ pub fn create_default_unoptimized_sha256_circuit_with_instances(
     builder.use_params(circuit_params)
 }
 
+pub fn generate_rsa_pk(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> (ProvingKey<G1Affine>, Vec<Vec<usize>>) {
+    let (tbs, signature_bigint) = extract_tbs_and_sig(verify_cert_path);
+
+    let public_key_modulus = extract_public_key(issuer_cert_path);
+
+    let builder = create_default_rsa_circuit_with_instances(k, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
+
+    // Generate params
+    println!("Generate params");
+    let params = gen_srs(k as u32);
+    
+    // println!("Generating proving key");
+    let pk = gen_pk(&params, &builder, None);
+    (pk, builder.break_points())
+}
+
+pub fn generate_rsa_proof(verify_cert_path: &str, issuer_cert_path: &str, k: usize, pk: ProvingKey<G1Affine>, break_points: Vec<Vec<usize>>) -> Snark {
+    let (tbs, signature_bigint) = extract_tbs_and_sig(verify_cert_path);
+
+    let public_key_modulus = extract_public_key(issuer_cert_path);
+
+    let builder = create_default_rsa_circuit_with_instances(k, tbs, public_key_modulus, signature_bigint, true, break_points);
+
+    // Generate params
+    println!("Generate params");
+    let params = gen_srs(k as u32);
+
+    // Generate proof
+    println!("Generating proof");
+
+    // TODO: very weird that passes mockprover but fails on real snark proof
+    // use halo2_base::halo2_proofs::dev::MockProver;
+    // MockProver::run(k as u32, &builder, builder.instances()).unwrap().assert_satisfied();
+    gen_snark_shplonk(&params, &pk, builder, None::<&str>)
+}
+
 pub fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
     let (tbs, signature_bigint) = extract_tbs_and_sig(verify_cert_path);
 
     let public_key_modulus = extract_public_key(issuer_cert_path);
 
-    let builder = create_default_rsa_circuit_with_instances(k, tbs, public_key_modulus, signature_bigint);
+    let builder = create_default_rsa_circuit_with_instances(k, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
 
     // Generate params
     println!("Generate params");
@@ -224,4 +269,42 @@ pub fn generate_unoptimized_sha256_circuit_with_instances(verify_cert_path: &str
     // Generate proof
     println!("Generating proof");
     gen_snark_shplonk(&params, &pk, builder, None::<&str>)
+}
+
+pub fn generate_zkevm_sha256_circuit(verify_cert_path: &str, k: usize) -> Snark {
+    let (tbs, _) = extract_tbs_and_sig(verify_cert_path);
+
+    // Generate params
+    println!("Generate params");
+    let params = gen_srs(k as u32);
+    
+    // println!("Generating proving key");
+    let mut dummy_circuit = Sha256BitCircuit::new(
+        Some(2usize.pow(k as u32) - 109),
+        vec![tbs.to_vec()],
+        false
+    );
+    // use halo2_base::halo2_proofs::halo2curves::ff::PrimeField;
+    // dummy_circuit.set_instances(vec![
+    //     Fr::from_u128(0x00000000000000000000000000000000eeb16b6a466d78243f0210594c79e2ea),
+    //     Fr::from_u128(0x000000000000000000000000000000005773a131a99b9c98158c743ebd7e521a)
+    // ]);
+    let pk = gen_pk(&params, &dummy_circuit, None);
+    // Generate proof
+    println!("Generating proof");
+    let mut sha256_bit_circuit = Sha256BitCircuit::new(
+        Some(2usize.pow(k as u32) - 109),
+        vec![tbs.to_vec()],
+        true
+    );
+    // sha256_bit_circuit.set_instances(vec![
+    //     Fr::from_u128(0x00000000000000000000000000000000eeb16b6a466d78243f0210594c79e2ea),
+    //     Fr::from_u128(0x000000000000000000000000000000005773a131a99b9c98158c743ebd7e521a)
+    // ]);
+    // TODO: why is mockprover working but gen_snark_shplonk fails with `SNARK proof failed to verify`
+    // use halo2_base::halo2_proofs::dev::MockProver;
+    // use snark_verifier_sdk::CircuitExt;
+    // MockProver::run(k as u32, &sha256_bit_circuit, sha256_bit_circuit.instances()).unwrap().assert_satisfied();
+    // print!("SHA256 bit circuit mock prover works");
+    gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
 }

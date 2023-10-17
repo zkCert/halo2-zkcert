@@ -48,7 +48,6 @@ impl X509VerifierAggregationCircuit {
             universality,
         );
 
-        // TODO: zkevm SHA256 vanilla snarks don't expose instances so this custom aggregation circuit doesn't work. Need to debug
         let snark_0_instances = aggregation_circuit.previous_instances()[0].clone();
         let snark_1_instances = aggregation_circuit.previous_instances()[1].clone();
         let snark_2_instances = aggregation_circuit.previous_instances()[2].clone();
@@ -61,6 +60,8 @@ impl X509VerifierAggregationCircuit {
         snark_2_instances.iter().zip(snark_3_instances.iter()).map(|(x, y)| {
             aggregation_circuit.builder.pool(0).threads[0].constrain_equal(x, y);
         }).collect_vec();
+
+        // TODO: link cert pairs with each other
 
         Self {
             aggregation_circuit
