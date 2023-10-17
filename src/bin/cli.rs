@@ -6,7 +6,7 @@ use std::env;
 use halo2_base::{
     halo2_proofs::halo2curves::bn256::Fr,
     halo2_proofs::plonk::Circuit,
-    gates::circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage, BaseCircuitParams},
+    gates::circuit::{builder::BaseCircuitBuilder, CircuitBuilderStage},
     gates::flex_gate::MultiPhaseThreadBreakPoints,
     utils::fs::gen_srs
 };
@@ -231,7 +231,7 @@ async fn main() {
             let (tbs, signature_bigint) = extract_tbs_and_sig(&verify_cert_path);
             let public_key_modulus = extract_public_key(&issuer_cert_path);
 
-            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint);
+            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
 
             if Path::new(&pk_path).exists() {
                 match remove_file(&pk_path) {
@@ -271,11 +271,11 @@ async fn main() {
             env::set_var("PARAMS_DIR", params_path);
             let params = gen_srs(k);
 
-            // let (tbs, _) = extract_tbs_and_sig(&verify_cert_path);
+            let (tbs, _) = extract_tbs_and_sig(&verify_cert_path);
 
             let dummy_circuit = Sha256BitCircuit::new(
                 Some(2usize.pow(k) - 109),
-                vec![],
+                vec![tbs],
                 false
             );
 
@@ -302,7 +302,7 @@ async fn main() {
             let (tbs, signature_bigint) = extract_tbs_and_sig(&verify_cert_path);
             let public_key_modulus = extract_public_key(&issuer_cert_path);
             
-            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint);
+            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint, true, vec![vec![]]);
             let pk = read_pk::<BaseCircuitBuilder<Fr>>(Path::new(&pk_path), builder.params()).unwrap();
 
             if Path::new(&proof_path).exists() {
