@@ -70,41 +70,30 @@ impl<F: Field> Circuit<F> for Sha256BitCircuit<F> {
                     self.num_rows.map(get_sha2_capacity),
                 );
                 println!("Witness generation time: {:?}", start.elapsed());
-                // Find the block where the final output is
-                let mut final_block = blocks[0].clone();
                 if self.witness_gen_only {
                     self.verify_output(&blocks);
-                    for assigned_blocks in blocks {
-                        let value = **value_to_option(assigned_blocks.is_final().value()).unwrap();
-                        let value = match value {
-                            Assigned::Trivial(v) => v,
-                            Assigned::Zero => F::ZERO,
-                            Assigned::Rational(a, b) => a * b.invert().unwrap(),
-                        };
-                        if value == F::ONE {
-                            final_block = assigned_blocks;
-                            break;
-                        }
-                    }
                 }
-                
-                let result = [
-                    final_block.output().lo().clone(),
-                    final_block.output().hi().clone(),
-                    ];
-                    {
-                        println!("Num rows: {:?}", self.num_rows);
-                    }
-                    
-                    Ok(result)
-                },
-            )?;
+
+                Ok(blocks)
+            },
+        )?;
 
         if !self.witness_gen_only {
             // expose public instances
             let mut layouter = layouter.namespace(|| "expose");
-            layouter.constrain_instance(result[0].cell(), config.instance, 0);
-            layouter.constrain_instance(result[1].cell(), config.instance, 1);
+            for assigned_blocks in result {
+                let value = **value_to_option(assigned_blocks.is_final().value()).unwrap_or(&&Assigned::Zero);
+                let value = match value {
+                    Assigned::Trivial(v) => v,
+                    Assigned::Zero => F::ZERO,
+                    Assigned::Rational(a, b) => a * b.invert().unwrap(),
+                };
+                if value == F::ONE {
+                    layouter.constrain_instance(assigned_blocks.output().lo().cell(), config.instance, 0);
+                    layouter.constrain_instance(assigned_blocks.output().hi().cell(), config.instance, 1);
+                    break;
+                }
+            }
         }
 
         Ok(())

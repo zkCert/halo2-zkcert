@@ -11,10 +11,10 @@ num-bigint = { version = "0.4", features = ["rand"] }
 sha2 = "0.10.6"
 rand = "0.8.5"
 rsa = { version = "0.6.1", features = ["serde"] }
-halo2-rsa = { branch = "main", default-features = false, features = [
+halo2-rsa = { branch = "community-edition", default-features = false, features = [
     "halo2-axiom",
     "display"
-], git = "https://github.com/zkpdf/halo2-rsa.git"}
+], git = "https://github.com/zkcert/halo2-rsa.git"}
 halo2-base = { branch = "community-edition", default-features = false, features = [
     "halo2-axiom",
     "display",
@@ -27,7 +27,7 @@ zkevm-hashes = { branch = "feat/zkevm-sha256", default-features = false, feature
 halo2-sha256-unoptimized = { branch = "main", default-features = false, features = [
     "halo2-axiom",
     "display",
-], git = "https://github.com/zkpdf/halo2-sha256-unoptimized.git"}
+], git = "https://github.com/zkcert/halo2-sha256-unoptimized.git"}
 snark-verifier-sdk = { branch = "community-edition", default-features = false, features = [
     "halo2-axiom",
     "display",
