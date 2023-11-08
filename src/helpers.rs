@@ -1,6 +1,6 @@
 use halo2_base::{
     AssignedValue,
-    halo2_proofs::{halo2curves::bn256::{Fr, G1Affine}, plonk::ProvingKey},
+    halo2_proofs::{halo2curves::{bn256::{Fr, G1Affine}, ff::PrimeField}, plonk::ProvingKey},
     gates::{
         circuit::builder::BaseCircuitBuilder,
         GateInstructions
@@ -156,7 +156,7 @@ pub fn create_default_rsa_circuit_with_instances(
 
     let signature = RSASignature::new(signature_bigint.clone());             // cloning might be slow
     let signature = rsa_chip.assign_signature(ctx, signature).unwrap();
-
+    // TODO: update halo2-rsa to only take 2 lo and hi u128 as inputs
     let is_valid = rsa_chip.verify_pkcs1v15_signature(ctx, &public_key, &hashed_u64s, &signature).unwrap();
     rsa_chip.biguint_config()
         .gate()
@@ -229,7 +229,6 @@ pub fn generate_rsa_proof(verify_cert_path: &str, issuer_cert_path: &str, k: usi
     // Generate proof
     println!("Generating proof");
 
-    // TODO: very weird that passes mockprover but fails on real snark proof
     // use halo2_base::halo2_proofs::dev::MockProver;
     // MockProver::run(k as u32, &builder, builder.instances()).unwrap().assert_satisfied();
     gen_snark_shplonk(&params, &pk, builder, None::<&str>)
@@ -243,11 +242,21 @@ pub fn generate_zkevm_sha256_pk(verify_cert_path: &str, k: usize) -> ProvingKey<
         vec![tbs.to_vec()],
         false
     );
-    // use halo2_base::halo2_proofs::halo2curves::ff::PrimeField;
-    // dummy_circuit.set_instances(vec![
-    //     Fr::from_u128(0x00000000000000000000000000000000eeb16b6a466d78243f0210594c79e2ea),
-    //     Fr::from_u128(0x000000000000000000000000000000005773a131a99b9c98158c743ebd7e521a)
-    // ]);
+    // Calculate public instances
+    let hashed_tbs = Sha256::digest(tbs);
+    println!("Hashed TBS: {:?}", hashed_tbs);
+    let lo = &hashed_tbs[0..16];
+    let hi = &hashed_tbs[16..32];
+    let mut hashed_lo = [0u8; 16];
+    let mut hashed_hi = [0u8; 16];
+    hashed_lo.copy_from_slice(lo);
+    hashed_hi.copy_from_slice(hi);
+    let lo_u128 = u128::from_be_bytes(hashed_lo);
+    let hi_u128 = u128::from_be_bytes(hashed_hi);
+    dummy_circuit.set_instances(vec![
+        Fr::from_u128(lo_u128),
+        Fr::from_u128(hi_u128)
+    ]);
 
     // Generate params
     println!("Generate params");
@@ -272,17 +281,22 @@ pub fn generate_zkevm_sha256_proof(verify_cert_path: &str, k: usize, pk: Proving
     
     // Generate proof
     println!("Generating proof");
-    
-    // TODO: calculate public instances
-    // TODO: why is mockprover working but gen_snark_shplonk fails with `SNARK proof failed to verify`
-    // sha256_bit_circuit.set_instances(vec![
-    //     Fr::from_u128(0x00000000000000000000000000000000eeb16b6a466d78243f0210594c79e2ea),
-    //     Fr::from_u128(0x000000000000000000000000000000005773a131a99b9c98158c743ebd7e521a)
-    // ]);
-    // use halo2_base::halo2_proofs::dev::MockProver;
-    // use snark_verifier_sdk::CircuitExt;
-    // MockProver::run(k as u32, &sha256_bit_circuit, sha256_bit_circuit.instances()).unwrap().assert_satisfied();
-    // print!("SHA256 bit circuit mock prover works");
+
+    // Calculate public instances
+    let hashed_tbs = Sha256::digest(tbs);
+    println!("Hashed TBS: {:?}", hashed_tbs);
+    let lo = &hashed_tbs[0..16];
+    let hi = &hashed_tbs[16..32];
+    let mut hashed_lo = [0u8; 16];
+    let mut hashed_hi = [0u8; 16];
+    hashed_lo.copy_from_slice(lo);
+    hashed_hi.copy_from_slice(hi);
+    let lo_u128 = u128::from_be_bytes(hashed_lo);
+    let hi_u128 = u128::from_be_bytes(hashed_hi);
+    sha256_bit_circuit.set_instances(vec![
+        Fr::from_u128(lo_u128),
+        Fr::from_u128(hi_u128)
+    ]);
     gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
 }
 

@@ -16,7 +16,8 @@ use std::vec;
 #[test]
 fn test_aggregation_split_zkevm_sha256_rsa() {
     println!("Generating dummy snark");
-    // TODO must generate 2 pks for RSA why?
+    let sha256_pk = generate_zkevm_sha256_pk("./certs/example_cert_3.pem", 11);
+    // TODO currently generating 2 pks for RSA?
     let (rsa_pk_1, break_points_1) = generate_rsa_pk(
         "./certs/example_cert_3.pem",
         "./certs/example_cert_2.pem",
@@ -27,7 +28,6 @@ fn test_aggregation_split_zkevm_sha256_rsa() {
         "./certs/example_cert_1.pem",
         16
     );
-    let sha256_pk = generate_zkevm_sha256_pk("./certs/example_cert_3.pem", 11);
     let snark1 = generate_zkevm_sha256_proof(
         "./certs/example_cert_3.pem",
         11,
@@ -106,8 +106,8 @@ fn test_generate_zkevm_sha256() {
         false
     );
     sha256_bit_circuit.set_instances(vec![
-        Fr::from_u128(116243219174636426894279773702785487386),
-        Fr::from_u128(317277478178579750436544215220351525610)
+        Fr::from_u128(0x00000000000000000000000000000000eeb16b6a466d78243f0210594c79e2ea),
+        Fr::from_u128(0x000000000000000000000000000000005773a131a99b9c98158c743ebd7e521a)
     ]);
     MockProver::run(k as u32, &sha256_bit_circuit, sha256_bit_circuit.instances()).unwrap().assert_satisfied();
 }

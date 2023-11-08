@@ -1134,7 +1134,7 @@ checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
 [[package]]
 name = "halo2-base"
 version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#980b39bcca5b3327aaef6c8d73577d9381bfa899"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#262f5c5e074fbbb88c9decf5516568c12413ab94"
 dependencies = [
  "ark-std",
  "getset",
@@ -1199,7 +1199,7 @@ dependencies = [
 [[package]]
 name = "halo2-ecc"
 version = "0.4.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#980b39bcca5b3327aaef6c8d73577d9381bfa899"
+source = "git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition#262f5c5e074fbbb88c9decf5516568c12413ab94"
 dependencies = [
  "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
  "itertools 0.10.5",
@@ -1237,11 +1237,12 @@ dependencies = [
 [[package]]
 name = "halo2-rsa"
 version = "0.1.0"
-source = "git+https://github.com/zkpdf/halo2-rsa.git?branch=main#cec7f8a6092cf1512107680598b88d44485579d8"
+source = "git+https://github.com/zkcert/halo2-rsa.git?branch=community-edition#2456799745917ca67d188c91d2b3d32d54b4e8a4"
 dependencies = [
  "env_logger",
  "halo2-base 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
  "halo2-ecc 0.4.0 (git+https://github.com/axiom-crypto/halo2-lib.git?branch=community-edition)",
+ "itertools 0.10.5",
  "num-bigint",
  "num-traits",
  "rand",
@@ -1252,7 +1253,7 @@ dependencies = [
 [[package]]
 name = "halo2-sha256-unoptimized"
 version = "0.1.0"
-source = "git+https://github.com/zkpdf/halo2-sha256-unoptimized.git?branch=main#ec2d2b28cdb7dd38cb9896b09720d09923fcc2f2"
+source = "git+https://github.com/zkcert/halo2-sha256-unoptimized.git?branch=main#ec2d2b28cdb7dd38cb9896b09720d09923fcc2f2"
 dependencies = [
  "console_error_panic_hook",
  "env_logger",
