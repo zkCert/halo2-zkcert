@@ -59,7 +59,5 @@ cargo test
 
 ## Issues
 Current issues and todos with the library. We welcome any contributions!
-1. Script to download TLS certs doesn't match manually inspecting the certs and downloading
-2. Doesn't support other certificate chaining standards, such as ECDSA and SHA3 yet
-3. Doesn't support CRL (certificate revocation lists yet)
-4. For RSA and SHA256 circuits, Mock prover is satisfied, but cannot verify a real proof (we can create proof, but fails in vk). Is it something to do with my snark-verifier version?
+1. Doesn't support other certificate chaining standards, such as ECDSA and SHA3 yet
+2. Doesn't support CRL (certificate revocation lists yet)

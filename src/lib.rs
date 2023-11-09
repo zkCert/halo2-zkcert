@@ -52,6 +52,10 @@ impl X509VerifierAggregationCircuit {
         let snark_1_instances = aggregation_circuit.previous_instances()[1].clone();
         let snark_2_instances = aggregation_circuit.previous_instances()[2].clone();
         let snark_3_instances = aggregation_circuit.previous_instances()[3].clone();
+        println!("snark_0_instances: {:?}", snark_0_instances);
+        println!("snark_1_instances: {:?}", snark_1_instances);
+        println!("snark_2_instances: {:?}", snark_2_instances);
+        println!("snark_3_instances: {:?}", snark_3_instances);
         
         snark_0_instances.iter().zip(snark_1_instances.iter()).map(|(x, y)| {
             aggregation_circuit.builder.pool(0).threads[0].constrain_equal(x, y);
