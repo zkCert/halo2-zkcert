@@ -17,23 +17,45 @@ use std::vec;
 #[test]
 fn test_x509_verifier_aggregation_circuit_evm_verification1() {
     println!("Generating dummy snark");
-    let snark1 = generate_unoptimized_sha256_circuit_with_instances(
-        "./certs/example_cert_3.pem",
-        19
-    );
-    let snark2 = generate_rsa_circuit_with_instances(
+    let sha256_pk = generate_zkevm_sha256_pk("./certs/example_cert_3.pem", 11);
+    // End vs intermediate certificates uses different RSA bits so need 2 pks
+    let (rsa_pk_2048, break_points_2048) = generate_rsa_pk(
         "./certs/example_cert_3.pem",
         "./certs/example_cert_2.pem",
-        17
+        17,
+        2048
     );
-    let snark3 = generate_unoptimized_sha256_circuit_with_instances(
-        "./certs/example_cert_2.pem",
-        19
-    );
-    let snark4 = generate_rsa_circuit_with_instances(
+    let (rsa_pk_4096, break_points_4096) = generate_rsa_pk(
         "./certs/example_cert_2.pem",
         "./certs/example_cert_1.pem",
-        17
+        17,
+        4096
+    );
+    let snark1 = generate_zkevm_sha256_proof(
+        "./certs/example_cert_3.pem",
+        11,
+        sha256_pk.clone()
+    );
+    let snark2 = generate_rsa_proof(
+        "./certs/example_cert_3.pem",
+        "./certs/example_cert_2.pem",
+        17,
+        rsa_pk_2048,
+        break_points_2048,
+        2048
+    );
+    let snark3 = generate_zkevm_sha256_proof(
+        "./certs/example_cert_2.pem",
+        11,
+        sha256_pk.clone()
+    );
+    let snark4 = generate_rsa_proof(
+        "./certs/example_cert_2.pem",
+        "./certs/example_cert_1.pem",
+        17,
+        rsa_pk_4096,
+        break_points_4096,
+        4096
     );
 
     // Create custom aggregation circuit using the snark that verifiers input of signature algorithm is same as output of hash function
