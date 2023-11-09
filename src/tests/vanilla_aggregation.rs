@@ -17,16 +17,18 @@ use std::vec;
 fn test_aggregation_split_zkevm_sha256_rsa() {
     println!("Generating dummy snark");
     let sha256_pk = generate_zkevm_sha256_pk("./certs/example_cert_3.pem", 11);
-    // TODO currently generating 2 pks for RSA?
-    let (rsa_pk_1, break_points_1) = generate_rsa_pk(
+    // End vs intermediate certificates uses different RSA bits so need 2 pks
+    let (rsa_pk_2048, break_points_2048) = generate_rsa_pk(
         "./certs/example_cert_3.pem",
         "./certs/example_cert_2.pem",
-        16
+        17,
+        2048
     );
-    let (rsa_pk_2, break_points_2) = generate_rsa_pk(
+    let (rsa_pk_4096, break_points_4096) = generate_rsa_pk(
         "./certs/example_cert_2.pem",
         "./certs/example_cert_1.pem",
-        16
+        17,
+        4096
     );
     let snark1 = generate_zkevm_sha256_proof(
         "./certs/example_cert_3.pem",
@@ -36,9 +38,10 @@ fn test_aggregation_split_zkevm_sha256_rsa() {
     let snark2 = generate_rsa_proof(
         "./certs/example_cert_3.pem",
         "./certs/example_cert_2.pem",
-        16,
-        rsa_pk_1,
-        break_points_1
+        17,
+        rsa_pk_2048,
+        break_points_2048,
+        2048
     );
     let snark3 = generate_zkevm_sha256_proof(
         "./certs/example_cert_2.pem",
@@ -48,9 +51,10 @@ fn test_aggregation_split_zkevm_sha256_rsa() {
     let snark4 = generate_rsa_proof(
         "./certs/example_cert_2.pem",
         "./certs/example_cert_1.pem",
-        16,
-        rsa_pk_2,
-        break_points_2
+        17,
+        rsa_pk_4096,
+        break_points_4096,
+        4096
     );
 
     // Create an aggregation circuit using the snark
@@ -113,13 +117,27 @@ fn test_generate_zkevm_sha256() {
 }
 
 #[test]
-fn test_generate_rsa() {
+fn test_generate_rsa_4096() {
     let k = 16;
     let (tbs, signature_bigint) = extract_tbs_and_sig("./certs/example_cert_2.pem");
+    let default_bits = 4096;
 
     let public_key_modulus = extract_public_key("./certs/example_cert_1.pem");
 
-    let builder = create_default_rsa_circuit_with_instances(k, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
+    let builder = create_default_rsa_circuit_with_instances(k, default_bits, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
+
+    MockProver::run(k as u32, &builder, builder.instances()).unwrap().assert_satisfied();
+}
+
+#[test]
+fn test_generate_rsa_2048() {
+    let k = 16;
+    let (tbs, signature_bigint) = extract_tbs_and_sig("./certs/example_cert_3.pem");
+    let default_bits = 2048;
+
+    let public_key_modulus = extract_public_key("./certs/example_cert_2.pem");
+
+    let builder = create_default_rsa_circuit_with_instances(k, default_bits, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
 
     MockProver::run(k as u32, &builder, builder.instances()).unwrap().assert_satisfied();
 }

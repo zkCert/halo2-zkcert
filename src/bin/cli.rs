@@ -60,7 +60,9 @@ enum Commands {
         #[arg(long, default_value = "./certs/cert_3.pem")]
         verify_cert_path: String,
         #[arg(long, default_value = "./certs/cert_2.pem")]
-        issuer_cert_path: String
+        issuer_cert_path: String,
+        #[arg(long, default_value = "4096")]
+        default_bits: usize
     },
     /// Generate proving keys for unoptimized SHA256 circuit
     GenUnoptimizedSha256Keys {
@@ -107,6 +109,8 @@ enum Commands {
         /// output proof file
         #[arg(long, default_value = "./build/rsa_1.proof")]
         proof_path: String,
+        #[arg(long, default_value = "4096")]
+        default_bits: usize,
     },
     ProveUnoptimizedSha256 {
         /// k parameter for circuit.
@@ -224,6 +228,7 @@ async fn main() {
             pk_path,
             verify_cert_path,
             issuer_cert_path,
+            default_bits,
         } => {
             env::set_var("PARAMS_DIR", params_path);
             let params = gen_srs(k);
@@ -231,7 +236,7 @@ async fn main() {
             let (tbs, signature_bigint) = extract_tbs_and_sig(&verify_cert_path);
             let public_key_modulus = extract_public_key(&issuer_cert_path);
 
-            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
+            let builder = create_default_rsa_circuit_with_instances(k as usize, default_bits, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
 
             if Path::new(&pk_path).exists() {
                 match remove_file(&pk_path) {
@@ -295,6 +300,7 @@ async fn main() {
             verify_cert_path,
             issuer_cert_path,
             proof_path,
+            default_bits,
         } => {
             env::set_var("PARAMS_DIR", params_path);
             let params = gen_srs(k);
@@ -302,7 +308,7 @@ async fn main() {
             let (tbs, signature_bigint) = extract_tbs_and_sig(&verify_cert_path);
             let public_key_modulus = extract_public_key(&issuer_cert_path);
             
-            let builder = create_default_rsa_circuit_with_instances(k as usize, tbs, public_key_modulus, signature_bigint, true, vec![vec![]]);
+            let builder = create_default_rsa_circuit_with_instances(k as usize, default_bits, tbs, public_key_modulus, signature_bigint, true, vec![vec![]]);
             let pk = read_pk::<BaseCircuitBuilder<Fr>>(Path::new(&pk_path), builder.params()).unwrap();
 
             if Path::new(&proof_path).exists() {

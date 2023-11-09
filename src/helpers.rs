@@ -96,6 +96,7 @@ pub fn extract_tbs_and_sig(verify_cert_path: &str) -> (Vec<u8>, BigUint) {
 
 pub fn create_default_rsa_circuit_with_instances(
     k: usize,
+    default_bits: usize,
     tbs: Vec<u8>,
     public_key_modulus: BigUint,
     signature_bigint: BigUint,
@@ -104,7 +105,6 @@ pub fn create_default_rsa_circuit_with_instances(
 ) -> BaseCircuitBuilder<Fr> {
     // Circuit inputs
     let limb_bits = 64;
-    let default_bits = 2048;
     let exp_bits = 5; // UNUSED
     let default_e = 65537_u32;
 
@@ -165,7 +165,6 @@ pub fn create_default_rsa_circuit_with_instances(
     // Insert input hash as public instance for circuit
     hashed_bytes.reverse();
     builder.assigned_instances[0].extend(hashed_bytes);
-    println!("Assigned instances: {:?}", builder.assigned_instances[0]);
 
     let circuit_params = builder.calculate_params(Some(10));
     println!("Circuit params: {:?}", circuit_params);
@@ -199,12 +198,12 @@ pub fn create_default_unoptimized_sha256_circuit_with_instances(
     builder.use_params(circuit_params)
 }
 
-pub fn generate_rsa_pk(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> (ProvingKey<G1Affine>, Vec<Vec<usize>>) {
+pub fn generate_rsa_pk(verify_cert_path: &str, issuer_cert_path: &str, k: usize, default_bits: usize) -> (ProvingKey<G1Affine>, Vec<Vec<usize>>) {
     let (tbs, signature_bigint) = extract_tbs_and_sig(verify_cert_path);
 
     let public_key_modulus = extract_public_key(issuer_cert_path);
 
-    let builder = create_default_rsa_circuit_with_instances(k, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
+    let builder = create_default_rsa_circuit_with_instances(k, default_bits, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
 
     // Generate params
     println!("Generate params");
@@ -215,12 +214,12 @@ pub fn generate_rsa_pk(verify_cert_path: &str, issuer_cert_path: &str, k: usize)
     (pk, builder.break_points())
 }
 
-pub fn generate_rsa_proof(verify_cert_path: &str, issuer_cert_path: &str, k: usize, pk: ProvingKey<G1Affine>, break_points: Vec<Vec<usize>>) -> Snark {
+pub fn generate_rsa_proof(verify_cert_path: &str, issuer_cert_path: &str, k: usize, pk: ProvingKey<G1Affine>, break_points: Vec<Vec<usize>>, default_bits: usize) -> Snark {
     let (tbs, signature_bigint) = extract_tbs_and_sig(verify_cert_path);
 
     let public_key_modulus = extract_public_key(issuer_cert_path);
 
-    let builder = create_default_rsa_circuit_with_instances(k, tbs, public_key_modulus, signature_bigint, true, break_points);
+    let builder = create_default_rsa_circuit_with_instances(k, default_bits, tbs, public_key_modulus, signature_bigint, true, break_points);
 
     // Generate params
     println!("Generate params");
@@ -298,40 +297,4 @@ pub fn generate_zkevm_sha256_proof(verify_cert_path: &str, k: usize, pk: Proving
         Fr::from_u128(hi_u128)
     ]);
     gen_snark_shplonk(&params, &pk, sha256_bit_circuit, None::<&str>)
-}
-
-pub fn generate_rsa_circuit_with_instances(verify_cert_path: &str, issuer_cert_path: &str, k: usize) -> Snark {
-    let (tbs, signature_bigint) = extract_tbs_and_sig(verify_cert_path);
-
-    let public_key_modulus = extract_public_key(issuer_cert_path);
-
-    let builder = create_default_rsa_circuit_with_instances(k, tbs, public_key_modulus, signature_bigint, false, vec![vec![]]);
-
-    // Generate params
-    println!("Generate params");
-    let params = gen_srs(k as u32);
-    
-    // println!("Generating proving key");
-    let pk = gen_pk(&params, &builder, None);
-
-    // Generate proof
-    println!("Generating proof");
-    gen_snark_shplonk(&params, &pk, builder, None::<&str>)
-}
-
-pub fn generate_unoptimized_sha256_circuit_with_instances(verify_cert_path: &str, k: usize) -> Snark {
-    let (tbs, _) = extract_tbs_and_sig(verify_cert_path);
-
-    let builder = create_default_unoptimized_sha256_circuit_with_instances(k, tbs);
-
-    // Generate params
-    println!("Generate params");
-    let params = gen_srs(k as u32);
-
-    // println!("Generating proving key");
-    let pk = gen_pk(&params, &builder, None);
-
-    // Generate proof
-    println!("Generating proof");
-    gen_snark_shplonk(&params, &pk, builder, None::<&str>)
 }
